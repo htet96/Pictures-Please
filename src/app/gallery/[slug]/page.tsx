@@ -5,17 +5,18 @@ import { notFound } from "next/navigation";
 import { isAdmin, hasGalleryAccess } from "@/lib/auth";
 import { GalleryRenderer } from "@/components/gallery/GalleryRenderer";
 import { PasswordGate } from "@/components/shared/PasswordGate";
+import { QRCodeButton } from "@/components/qr/QRCodeButton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload, ArrowLeft } from "lucide-react";
 
-type Props = { params: Promise<{ galleryId: string }> };
+type Props = { params: Promise<{ slug: string }> };
 
 export default async function GalleryPage({ params }: Props) {
-  const { galleryId } = await params;
+  const { slug } = await params;
 
   const gallery = await prisma.gallery.findUnique({
-    where: { id: galleryId },
+    where: { slug },
     include: {
       photos: {
         where: { status: "APPROVED" },
@@ -29,9 +30,9 @@ export default async function GalleryPage({ params }: Props) {
   const admin = await isAdmin();
 
   if (gallery.password && !admin) {
-    const hasAccess = await hasGalleryAccess(galleryId);
+    const hasAccess = await hasGalleryAccess(gallery.id);
     if (!hasAccess) {
-      return <PasswordGate galleryId={galleryId} galleryName={gallery.name} />;
+      return <PasswordGate galleryId={gallery.id} galleryName={gallery.name} />;
     }
   }
 
@@ -58,8 +59,9 @@ export default async function GalleryPage({ params }: Props) {
             <span className="text-sm text-muted-foreground hidden sm:block">
               {gallery.photos.length} photo{gallery.photos.length !== 1 ? "s" : ""}
             </span>
+            <QRCodeButton galleryId={gallery.id} />
             {gallery.allowUserUpload && (
-              <Link href={`/gallery/${galleryId}/upload`}>
+              <Link href={`/gallery/${gallery.slug}/upload`}>
                 <Button size="sm">
                   <Upload className="h-4 w-4 mr-1 sm:mr-2" />
                   <span className="hidden sm:inline">Upload</span>
@@ -67,7 +69,7 @@ export default async function GalleryPage({ params }: Props) {
               </Link>
             )}
             {admin && (
-              <Link href={`/admin/galleries/${galleryId}`}>
+              <Link href={`/admin/galleries/${gallery.id}`}>
                 <Button size="sm" variant="outline">Manage</Button>
               </Link>
             )}
@@ -80,7 +82,7 @@ export default async function GalleryPage({ params }: Props) {
           <div className="flex flex-col items-center justify-center py-24 text-muted-foreground text-center px-4">
             <p className="text-lg mb-2">No photos yet</p>
             {gallery.allowUserUpload && (
-              <Link href={`/gallery/${galleryId}/upload`}>
+              <Link href={`/gallery/${gallery.slug}/upload`}>
                 <Button className="mt-4">
                   <Upload className="h-4 w-4 mr-2" />
                   Upload the first photo

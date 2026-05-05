@@ -11,7 +11,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const gallery = await prisma.gallery.findUnique({ where: { id: galleryId } });
   if (!gallery) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const uploadUrl = getUploadUrl(req, gallery.id);
+  const uploadUrl = getUploadUrl(req, gallery.slug);
   const svg = await QRCode.toString(uploadUrl, { type: "svg", margin: 2, width: 300 });
 
   return new NextResponse(svg, {

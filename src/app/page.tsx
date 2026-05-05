@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Camera, Images, Lock, Plus } from "lucide-react";
+import { Images, Lock, Plus } from "lucide-react";
 
 export default async function Home() {
   const admin = await isAdmin();
@@ -37,10 +37,9 @@ export default async function Home() {
     <div className="min-h-screen flex flex-col">
       <header className="border-b bg-card">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Camera className="h-6 w-6" />
-            <span className="font-semibold text-lg">Photo Gallery</span>
-          </div>
+          <Link href="/">
+            <span className="font-semibold text-lg">📸 Pictures Please 📸</span>
+          </Link>
           <div className="flex items-center gap-2">
             {canCreate && (
               <Link href="/gallery/create">
@@ -79,7 +78,7 @@ export default async function Home() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {galleries.map((gallery) => (
-              <Link key={gallery.id} href={`/gallery/${gallery.id}`} className="group">
+              <Link key={gallery.id} href={`/gallery/${gallery.slug}`} className="group">
                 <Card className="h-full transition-shadow hover:shadow-lg">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
@@ -101,7 +100,6 @@ export default async function Home() {
                       <Badge variant="secondary">
                         {gallery._count.photos} photo{gallery._count.photos !== 1 ? "s" : ""}
                       </Badge>
-                      <Badge variant="outline">{gallery.displayMode}</Badge>
                     </div>
                   </CardContent>
                 </Card>

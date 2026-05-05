@@ -64,7 +64,7 @@ export function CreateGalleryForm({ isAdmin }: { isAdmin: boolean }) {
     if (res.ok) {
       const data = await res.json();
       toast.success("Gallery created!");
-      router.push(isAdmin ? `/admin/galleries/${data.id}` : `/gallery/${data.id}`);
+      router.push(isAdmin ? `/admin/galleries/${data.id}` : `/gallery/${data.slug}`);
     } else {
       const data = await res.json();
       toast.error(data.error ?? "Failed to create gallery");

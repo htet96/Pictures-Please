@@ -6,21 +6,21 @@ import { Upload, Image as ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
-  onFileSelected: (file: File) => void;
+  onFilesSelected: (files: File[]) => void;
   disabled?: boolean;
 }
 
-export function UploadDropzone({ onFileSelected, disabled }: Props) {
+export function UploadDropzone({ onFilesSelected, disabled }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       setError(null);
-      if (acceptedFiles[0]) {
-        onFileSelected(acceptedFiles[0]);
+      if (acceptedFiles.length > 0) {
+        onFilesSelected(acceptedFiles);
       }
     },
-    [onFileSelected]
+    [onFilesSelected]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -33,11 +33,11 @@ export function UploadDropzone({ onFileSelected, disabled }: Props) {
       "image/heic": [".heic"],
     },
     maxSize: 20 * 1024 * 1024,
-    maxFiles: 1,
+    multiple: true,
     disabled,
     onDropRejected: (rejections) => {
       const err = rejections[0]?.errors[0];
-      if (err?.code === "file-too-large") setError("File must be under 20MB");
+      if (err?.code === "file-too-large") setError("Each file must be under 20MB");
       else if (err?.code === "file-invalid-type") setError("Only images are allowed");
       else setError("Invalid file");
     },
@@ -64,13 +64,13 @@ export function UploadDropzone({ onFileSelected, disabled }: Props) {
       </div>
       <div>
         <p className="font-medium">
-          {isDragActive ? "Drop your photo here" : "Drag & drop a photo here"}
+          {isDragActive ? "Drop your photos here" : "Drag & drop photos here"}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          or tap to browse your camera roll
+          or tap to browse — select multiple photos at once
         </p>
         <p className="text-xs text-muted-foreground mt-2">
-          JPG, PNG, WebP, GIF, HEIC up to 20MB
+          JPG, PNG, WebP, GIF, HEIC up to 20MB each
         </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

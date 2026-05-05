@@ -9,7 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "Photo Gallery",
+  title: "Pictures Please",
   description: "Self-hosted photo gallery",
 };
 

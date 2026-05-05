@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   X,
-  Camera,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,10 +42,9 @@ export function Sidebar() {
 
   const navContent = (
     <>
-      <div className="flex items-center gap-2 px-4 py-4 border-b">
-        <Camera className="h-6 w-6" />
-        <span className="font-semibold text-lg">Photo Gallery</span>
-      </div>
+      <Link href="/" className="flex items-center gap-2 px-4 py-4 border-b hover:opacity-80 transition-opacity">
+        <span className="font-semibold text-lg">📸 Pictures Please 📸</span>
+      </Link>
       <nav className="flex-1 p-3 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -91,10 +89,9 @@ export function Sidebar() {
 
       {/* Mobile top bar */}
       <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card">
-        <div className="flex items-center gap-2">
-          <Camera className="h-5 w-5" />
-          <span className="font-semibold">Photo Gallery</span>
-        </div>
+        <Link href="/" className="font-semibold hover:opacity-80 transition-opacity">
+          📸 Pictures Please 📸
+        </Link>
         <Button
           variant="ghost"
           size="icon"

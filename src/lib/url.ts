@@ -13,6 +13,6 @@ export function getBaseUrl(request: Request): string {
   return `${protocol}://${hostname}`;
 }
 
-export function getUploadUrl(request: Request, galleryId: string): string {
-  return `${getBaseUrl(request)}/gallery/${galleryId}/upload`;
+export function getUploadUrl(request: Request, gallerySlug: string): string {
+  return `${getBaseUrl(request)}/gallery/${gallerySlug}/upload`;
 }

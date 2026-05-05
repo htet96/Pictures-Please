@@ -4,12 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { UploadPage } from "@/components/upload/UploadPage";
 
-type Props = { params: Promise<{ galleryId: string }> };
+type Props = { params: Promise<{ slug: string }> };
 
 export default async function GalleryUploadPage({ params }: Props) {
-  const { galleryId } = await params;
+  const { slug } = await params;
 
-  const gallery = await prisma.gallery.findUnique({ where: { id: galleryId } });
+  const gallery = await prisma.gallery.findUnique({ where: { slug } });
   if (!gallery) notFound();
 
   if (!gallery.allowUserUpload) {

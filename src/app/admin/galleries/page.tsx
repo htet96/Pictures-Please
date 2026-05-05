@@ -68,7 +68,7 @@ export default async function GalleriesPage() {
                   )}
                 </div>
                 <div className="flex gap-2 mt-auto">
-                  <Link href={`/gallery/${gallery.id}`} className="flex-1">
+                  <Link href={`/gallery/${gallery.slug}`} className="flex-1">
                     <Button variant="outline" size="sm" className="w-full">
                       View
                     </Button>
