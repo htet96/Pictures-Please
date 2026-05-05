@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { MasonryView } from "./MasonryView";
 import { GridView } from "./GridView";
+import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
-import { CarouselView } from "./CarouselView";
 import { Lightbox } from "./Lightbox";
 import { cn } from "@/lib/utils";
 
@@ -24,10 +23,9 @@ interface Props {
 }
 
 const MODES = [
-  { value: "MASONRY", label: "Masonry" },
-  { value: "GRID", label: "Grid" },
+  { value: "MASONRY", label: "Photos" },
+  { value: "GRID", label: "Mosaic" },
   { value: "SLIDESHOW", label: "Slideshow" },
-  { value: "CAROUSEL", label: "Carousel" },
 ];
 
 export function GalleryRenderer({ photos, displayMode, canDelete }: Props) {
@@ -58,10 +56,14 @@ export function GalleryRenderer({ photos, displayMode, canDelete }: Props) {
         ))}
       </div>
 
-      {activeMode === "MASONRY" && <MasonryView {...sharedProps} />}
-      {activeMode === "GRID" && <GridView {...sharedProps} />}
-      {activeMode === "SLIDESHOW" && <SlideshowView photos={photos} canDelete={canDelete} />}
-      {activeMode === "CAROUSEL" && <CarouselView photos={photos} canDelete={canDelete} />}
+      {/* MASONRY = Photos (uniform grid) */}
+      {(activeMode === "MASONRY") && <GridView {...sharedProps} />}
+      {/* GRID = Mosaic (8-per-page patterns with play/pause) */}
+      {(activeMode === "GRID") && <MosaicView {...sharedProps} />}
+      {/* SLIDESHOW and CAROUSEL both use SlideshowView */}
+      {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
+        <SlideshowView photos={photos} canDelete={canDelete} />
+      )}
 
       {lightboxIndex !== null && (
         <Lightbox

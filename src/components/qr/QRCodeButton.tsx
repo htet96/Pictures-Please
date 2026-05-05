@@ -18,7 +18,7 @@ export function QRCodeButton({ galleryId }: Props) {
       </Button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)}>
           <div
             className="bg-background rounded-xl shadow-xl p-6 max-w-xs w-full space-y-4 text-center"
             onClick={(e) => e.stopPropagation()}

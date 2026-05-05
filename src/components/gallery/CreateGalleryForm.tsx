@@ -117,10 +117,9 @@ export function CreateGalleryForm({ isAdmin }: { isAdmin: boolean }) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="MASONRY">Masonry</SelectItem>
-            <SelectItem value="GRID">Grid</SelectItem>
+            <SelectItem value="MASONRY">Photos</SelectItem>
+            <SelectItem value="GRID">Mosaic</SelectItem>
             <SelectItem value="SLIDESHOW">Slideshow</SelectItem>
-            <SelectItem value="CAROUSEL">Carousel</SelectItem>
           </SelectContent>
         </Select>
       </div>
