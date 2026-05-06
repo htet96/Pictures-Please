@@ -7,6 +7,7 @@ import { GalleryRenderer } from "@/components/gallery/GalleryRenderer";
 import { PasswordGate } from "@/components/shared/PasswordGate";
 import { QRCodeButton } from "@/components/qr/QRCodeButton";
 import { PageTransition } from "@/components/shared/PageTransition";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
@@ -69,6 +70,7 @@ export default async function GalleryPage({ params }: Props) {
             <span className="text-xs text-muted-foreground hidden sm:block tracking-wide">
               {gallery.photos.length} photo{gallery.photos.length !== 1 ? "s" : ""}
             </span>
+            <ThemeToggle />
             <QRCodeButton galleryId={gallery.id} />
             {gallery.allowUserUpload && (
               <Link href={`/gallery/${gallery.slug}/upload`}>

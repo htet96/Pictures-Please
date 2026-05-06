@@ -4,6 +4,7 @@ import { isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { CreateGalleryForm } from "@/components/gallery/CreateGalleryForm";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -23,17 +24,20 @@ export default async function CreateGalleryPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border/60 bg-card/80 backdrop-blur-md sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-3">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="hover:text-primary">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/">
-            <span className="font-display text-2xl font-semibold tracking-wide text-foreground hover:text-primary transition-colors">
-              Pictures Please
-            </span>
-          </Link>
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/">
+              <Button variant="ghost" size="icon" className="hover:text-primary">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/">
+              <span className="font-display text-2xl font-semibold tracking-wide text-foreground hover:text-primary transition-colors">
+                Pictures Please
+              </span>
+            </Link>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
 

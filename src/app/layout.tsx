@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/shared/ThemeProvider";
 
 const displayFont = Cormorant_Garamond({
   variable: "--font-display",
@@ -33,10 +34,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}>
+    <html lang="en" suppressHydrationWarning className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
-        {children}
-        <Toaster position="bottom-right" richColors />
+        <ThemeProvider>
+          {children}
+          <Toaster position="bottom-right" richColors />
+        </ThemeProvider>
       </body>
     </html>
   );

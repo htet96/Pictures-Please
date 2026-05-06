@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Images, Plus } from "lucide-react";
 import { GalleryGrid } from "@/components/home/GalleryGrid";
+import { HomeBackground } from "@/components/home/HomeBackground";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 export default async function Home() {
   const admin = await isAdmin();
@@ -27,7 +29,9 @@ export default async function Home() {
   const canCreate = admin || settings.allowUserGalleries;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col relative">
+      <HomeBackground />
+
       <header className="border-b border-border/60 bg-card/80 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/">
@@ -35,7 +39,8 @@ export default async function Home() {
               Pictures Please
             </span>
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
             {canCreate && (
               <Link href="/gallery/create">
                 <Button size="sm" variant="outline" className="border-border hover:border-primary hover:text-primary transition-colors">
@@ -60,7 +65,7 @@ export default async function Home() {
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto px-6 py-12 w-full">
+      <main className="flex-1 relative z-10 max-w-6xl mx-auto px-6 py-12 w-full">
         {/* Grid-breaking decorative watermark */}
         <div className="relative mb-12">
           <span
@@ -98,7 +103,7 @@ export default async function Home() {
         )}
       </main>
 
-      <footer className="border-t border-border/30 py-6 text-center text-xs text-muted-foreground/40 tracking-widest uppercase">
+      <footer className="relative z-10 border-t border-border/30 py-6 text-center text-xs text-muted-foreground/40 tracking-widest uppercase">
         Pictures Please
       </footer>
     </div>

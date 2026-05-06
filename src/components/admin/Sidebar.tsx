@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
@@ -67,16 +68,17 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-3 border-t border-border/60">
+      <div className="p-3 border-t border-border/60 flex items-center justify-between gap-2">
         <Button
           variant="ghost"
           size="sm"
-          className="w-full justify-start gap-3 text-muted-foreground hover:text-primary hover:bg-muted/50"
+          className="flex-1 justify-start gap-3 text-muted-foreground hover:text-primary hover:bg-muted/50"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
           Logout
         </Button>
+        <ThemeToggle />
       </div>
     </>
   );
@@ -93,15 +95,18 @@ export function Sidebar() {
         <Link href="/" className="font-display text-lg font-semibold hover:text-primary transition-colors">
           Pictures Please
         </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setOpen(!open)}
-          aria-label="Toggle menu"
-          className="hover:text-primary"
-        >
-          {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-        </Button>
+        <div className="flex items-center gap-1">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(!open)}
+            aria-label="Toggle menu"
+            className="hover:text-primary"
+          >
+            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </Button>
+        </div>
       </div>
 
       {/* Mobile drawer */}

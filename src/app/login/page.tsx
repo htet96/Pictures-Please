@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import Link from "next/link";
 
 function LoginForm() {
@@ -102,13 +103,17 @@ export default function LoginPage() {
         className="pointer-events-none fixed inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,oklch(0.78_0.14_75/0.07),transparent)]"
       />
 
+      {/* Theme toggle — top right */}
+      <div className="fixed top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 20, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="relative w-full max-w-sm"
       >
-        {/* Logo link */}
         <div className="text-center mb-8">
           <Link href="/" className="font-display text-3xl font-semibold text-foreground hover:text-primary transition-colors">
             Pictures Please
