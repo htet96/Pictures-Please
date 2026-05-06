@@ -91,11 +91,14 @@ export function SlideshowView({ photos, canDelete, speed = 4000, transition = "f
 
   if (photos.length === 0) return null;
 
-  const transitionClass = {
-    fade: loaded ? "opacity-100" : "opacity-0",
-    zoom: loaded ? "opacity-100 scale-100" : "opacity-0 scale-95",
+  const transitionClass = ({
+    fade:  loaded ? "opacity-100" : "opacity-0",
+    zoom:  loaded ? "opacity-100 scale-100" : "opacity-0 scale-95",
     slide: loaded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8",
-  }[transition] ?? (loaded ? "opacity-100" : "opacity-0");
+    blur:  loaded ? "opacity-100 blur-0" : "opacity-0 blur-sm",
+    drop:  loaded ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6",
+    rise:  loaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
+  } as Record<string, string>)[transition] ?? (loaded ? "opacity-100" : "opacity-0");
 
   return (
     <div

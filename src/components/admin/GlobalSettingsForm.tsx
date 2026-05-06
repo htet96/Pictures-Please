@@ -17,6 +17,7 @@ interface Settings {
   allowUserGalleries: boolean;
   defaultRequireApproval: boolean;
   defaultAllowUserDelete: boolean;
+  adminPasswordOnly: boolean;
   slideshowSpeed: number;
   slideshowTransition: string;
 }
@@ -32,8 +33,11 @@ const SPEED_OPTIONS = [
 
 const TRANSITION_OPTIONS = [
   { value: "fade", label: "Fade" },
-  { value: "zoom", label: "Zoom" },
-  { value: "slide", label: "Slide" },
+  { value: "zoom", label: "Zoom In" },
+  { value: "slide", label: "Slide Right" },
+  { value: "blur", label: "Blur Fade" },
+  { value: "drop", label: "Drop Down" },
+  { value: "rise", label: "Rise Up" },
 ];
 
 export function GlobalSettingsForm({ settings }: { settings: Settings }) {
@@ -67,6 +71,11 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
       key: "defaultAllowUserDelete",
       label: "Default: allow users to delete photos",
       description: "New galleries will allow uploaders to delete their own photos by default.",
+    },
+    {
+      key: "adminPasswordOnly",
+      label: "Admin login: password only",
+      description: "Remove the username field from the admin login screen.",
     },
   ];
 
@@ -109,7 +118,7 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
         </div>
 
         <div className="space-y-2">
-          <Label>Transition Animation (Slideshow)</Label>
+          <Label>Transition Animation (Slideshow &amp; Mosaic)</Label>
           <Select
             value={form.slideshowTransition}
             onValueChange={(v) => setForm({ ...form, slideshowTransition: v ?? form.slideshowTransition })}

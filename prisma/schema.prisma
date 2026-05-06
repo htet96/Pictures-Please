@@ -50,6 +50,7 @@ model GlobalSettings {
   defaultAllowUserDelete Boolean @default(false)
   slideshowSpeed         Int     @default(4000)
   slideshowTransition    String  @default("fade")
+  adminPasswordOnly      Boolean @default(false)
 }
 
 enum DisplayMode {

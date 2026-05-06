@@ -21,6 +21,7 @@ interface Props {
   onPhotoClick: (index: number) => void;
   canDelete?: boolean;
   speed?: number;
+  transition?: string;
 }
 
 type Cell = { gridColumn: string; gridRow: string };
@@ -65,7 +66,7 @@ const PATTERNS: Cell[][] = [
 const PAGE_SIZE = 8;
 const CELL_HEIGHT = "clamp(80px, calc(22vw - 8px), 220px)";
 
-export function MosaicView({ photos, onPhotoClick, canDelete, speed = 4000 }: Props) {
+export function MosaicView({ photos, onPhotoClick, canDelete, speed = 4000, transition = "fade" }: Props) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement>(null);
   const totalPages = Math.max(1, Math.ceil(photos.length / PAGE_SIZE));
@@ -118,6 +119,15 @@ export function MosaicView({ photos, onPhotoClick, canDelete, speed = 4000 }: Pr
   const pagePhotos = photos.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const pattern = PATTERNS[page % PATTERNS.length];
 
+  const gridVisible = ({
+    fade:  visible ? "opacity-100" : "opacity-0",
+    zoom:  visible ? "opacity-100 scale-100" : "opacity-0 scale-95",
+    slide: visible ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8",
+    blur:  visible ? "opacity-100 blur-0" : "opacity-0 blur-sm",
+    drop:  visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6",
+    rise:  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
+  } as Record<string, string>)[transition] ?? (visible ? "opacity-100" : "opacity-0");
+
   async function handleDelete(photoId: string, e: React.MouseEvent) {
     e.stopPropagation();
     if (!confirm("Delete this photo?")) return;
@@ -129,7 +139,7 @@ export function MosaicView({ photos, onPhotoClick, canDelete, speed = 4000 }: Pr
   return (
     <div ref={containerRef} className={cn("p-4", fullscreen && "bg-background min-h-screen flex flex-col justify-center")}>
       <div
-        className={cn("w-full grid grid-cols-4 gap-2 transition-opacity duration-200", visible ? "opacity-100" : "opacity-0")}
+        className={cn("w-full grid grid-cols-4 gap-2 transition-all duration-300", gridVisible)}
         style={{ gridTemplateRows: `repeat(3, ${CELL_HEIGHT})` }}
       >
         {pagePhotos.map((photo, i) => (

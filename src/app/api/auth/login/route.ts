@@ -7,14 +7,14 @@ import { SessionData, sessionOptions } from "@/lib/session";
 export async function POST(req: NextRequest) {
   const { username, password } = await req.json();
 
-  if (!username || !password) {
+  if (!password) {
     return NextResponse.json(
-      { error: "Username and password required" },
+      { error: "Password is required" },
       { status: 400 }
     );
   }
 
-  const valid = await validateAdminCredentials(username, password);
+  const valid = await validateAdminCredentials(username ?? "", password);
   if (!valid) {
     return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
   }

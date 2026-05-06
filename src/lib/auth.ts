@@ -1,12 +1,12 @@
 import { timingSafeEqual } from "crypto";
 import { getSession } from "./session";
 import { redirect } from "next/navigation";
+import { prisma } from "./prisma";
 
 function safeCompare(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);
   if (bufA.length !== bufB.length) {
-    // Still run timingSafeEqual to avoid timing attacks, then return false
     timingSafeEqual(bufA, Buffer.alloc(bufA.length));
     return false;
   }
@@ -19,9 +19,18 @@ export async function validateAdminCredentials(
 ): Promise<boolean> {
   const validUsername = process.env.ADMIN_USERNAME ?? "";
   const validPassword = process.env.ADMIN_PASSWORD ?? "";
-  return (
-    safeCompare(username, validUsername) && safeCompare(password, validPassword)
-  );
+
+  const settings = await prisma.globalSettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton" },
+    update: {},
+  });
+
+  if (settings.adminPasswordOnly) {
+    return safeCompare(password, validPassword);
+  }
+
+  return safeCompare(username, validUsername) && safeCompare(password, validPassword);
 }
 
 export async function requireAdmin() {

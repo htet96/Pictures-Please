@@ -27,15 +27,16 @@ export async function processUpload(
   const filename = `${createId()}.${ext}`;
   const thumbnailFilename = `${createId()}.webp`;
 
-  const sharpInstance = sharp(buffer);
-  const metadata = await sharpInstance.metadata();
+  // Apply EXIF auto-rotation so images display with correct orientation
+  const rotatedBuffer = await sharp(buffer).rotate().toBuffer();
+  const metadata = await sharp(rotatedBuffer).metadata();
 
   const width = metadata.width ?? 0;
   const height = metadata.height ?? 0;
 
-  await saveOriginal(galleryId, filename, buffer);
+  await saveOriginal(galleryId, filename, rotatedBuffer);
 
-  const thumbnailBuffer = await sharp(buffer)
+  const thumbnailBuffer = await sharp(rotatedBuffer)
     .resize(600, undefined, { withoutEnlargement: true })
     .webp({ quality: 80 })
     .toBuffer();

@@ -9,13 +9,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -33,7 +26,6 @@ interface GalleryData {
   name: string;
   slug: string;
   description: string | null;
-  displayMode: string;
   hasPassword: boolean;
   requireApproval: boolean;
   allowUserDelete: boolean;
@@ -47,7 +39,6 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
   const [form, setForm] = useState({
     name: gallery.name,
     description: gallery.description ?? "",
-    displayMode: gallery.displayMode,
     password: "",
     removePassword: false,
     requireApproval: gallery.requireApproval,
@@ -61,7 +52,6 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
     const body: Record<string, unknown> = {
       name: form.name,
       description: form.description || null,
-      displayMode: form.displayMode,
       requireApproval: form.requireApproval,
       allowUserDelete: form.allowUserDelete,
       allowUserUpload: form.allowUserUpload,
@@ -124,23 +114,6 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           rows={3}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Display Mode</Label>
-        <Select
-          value={form.displayMode}
-          onValueChange={(v) => setForm({ ...form, displayMode: v ?? form.displayMode })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="MASONRY">Photos</SelectItem>
-            <SelectItem value="GRID">Mosaic</SelectItem>
-            <SelectItem value="SLIDESHOW">Slideshow</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">

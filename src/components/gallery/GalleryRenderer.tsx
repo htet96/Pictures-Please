@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { GridView } from "./GridView";
+import { MasonryView } from "./MasonryView";
 import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
 import { Lightbox } from "./Lightbox";
@@ -58,10 +58,10 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
         ))}
       </div>
 
-      {/* MASONRY = Photos (uniform grid) */}
-      {(activeMode === "MASONRY") && <GridView {...sharedProps} />}
+      {/* MASONRY = Photos (masonry layout) */}
+      {(activeMode === "MASONRY") && <MasonryView {...sharedProps} />}
       {/* GRID = Mosaic (8-per-page patterns with play/pause) */}
-      {(activeMode === "GRID") && <MosaicView {...sharedProps} speed={slideshowSpeed} />}
+      {(activeMode === "GRID") && <MosaicView {...sharedProps} speed={slideshowSpeed} transition={slideshowTransition} />}
       {/* SLIDESHOW and CAROUSEL both use SlideshowView */}
       {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
         <SlideshowView photos={photos} canDelete={canDelete} speed={slideshowSpeed} transition={slideshowTransition} />
