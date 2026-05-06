@@ -20,6 +20,7 @@ interface Settings {
   adminPasswordOnly: boolean;
   slideshowSpeed: number;
   slideshowTransition: string;
+  transitionDuration: number;
 }
 
 const SPEED_OPTIONS = [
@@ -109,6 +110,31 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
             </SelectTrigger>
             <SelectContent>
               {SPEED_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Transition Speed</Label>
+          <Select
+            value={String(form.transitionDuration)}
+            onValueChange={(v) => setForm({ ...form, transitionDuration: Number(v) })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                { value: 200, label: "Fast (200ms)" },
+                { value: 350, label: "Moderate (350ms)" },
+                { value: 500, label: "Normal (500ms)" },
+                { value: 700, label: "Slow (700ms)" },
+                { value: 1000, label: "Very Slow (1s)" },
+              ].map((opt) => (
                 <SelectItem key={opt.value} value={String(opt.value)}>
                   {opt.label}
                 </SelectItem>

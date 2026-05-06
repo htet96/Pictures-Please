@@ -22,6 +22,7 @@ interface Props {
   canDelete?: boolean;
   slideshowSpeed?: number;
   slideshowTransition?: string;
+  transitionDuration?: number;
 }
 
 const MODES = [
@@ -30,14 +31,12 @@ const MODES = [
   { value: "SLIDESHOW", label: "Slideshow" },
 ];
 
-export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed, slideshowTransition }: Props) {
+export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed, slideshowTransition, transitionDuration }: Props) {
   const [activeMode, setActiveMode] = useState(displayMode);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
   const handleOpen = (index: number) => setLightboxIndex(index);
   const handleClose = () => setLightboxIndex(null);
-
-  const sharedProps = { photos, onPhotoClick: handleOpen, canDelete };
 
   return (
     <>
@@ -58,13 +57,28 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
         ))}
       </div>
 
-      {/* MASONRY = Photos (masonry layout) */}
-      {(activeMode === "MASONRY") && <MasonryView {...sharedProps} />}
-      {/* GRID = Mosaic (8-per-page patterns with play/pause) */}
-      {(activeMode === "GRID") && <MosaicView {...sharedProps} speed={slideshowSpeed} transition={slideshowTransition} />}
-      {/* SLIDESHOW and CAROUSEL both use SlideshowView */}
+      {/* MASONRY = Photos — delete enabled here only */}
+      {activeMode === "MASONRY" && (
+        <MasonryView photos={photos} onPhotoClick={handleOpen} canDelete={canDelete} />
+      )}
+      {/* GRID = Mosaic — no delete */}
+      {activeMode === "GRID" && (
+        <MosaicView
+          photos={photos}
+          onPhotoClick={handleOpen}
+          speed={slideshowSpeed}
+          transition={slideshowTransition}
+          transitionDuration={transitionDuration}
+        />
+      )}
+      {/* SLIDESHOW — no delete */}
       {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
-        <SlideshowView photos={photos} canDelete={canDelete} speed={slideshowSpeed} transition={slideshowTransition} />
+        <SlideshowView
+          photos={photos}
+          speed={slideshowSpeed}
+          transition={slideshowTransition}
+          transitionDuration={transitionDuration}
+        />
       )}
 
       {lightboxIndex !== null && (

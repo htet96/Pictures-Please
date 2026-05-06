@@ -106,6 +106,7 @@ export default async function GalleryPage({ params }: Props) {
             canDelete={admin || gallery.allowUserDelete}
             slideshowSpeed={settings.slideshowSpeed}
             slideshowTransition={settings.slideshowTransition}
+            transitionDuration={settings.transitionDuration}
           />
         )}
       </main>

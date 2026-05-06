@@ -31,6 +31,7 @@ export async function PATCH(req: NextRequest) {
       defaultAllowUserDelete: body.defaultAllowUserDelete,
       slideshowSpeed: body.slideshowSpeed,
       slideshowTransition: body.slideshowTransition,
+      transitionDuration: body.transitionDuration,
       adminPasswordOnly: body.adminPasswordOnly,
     },
   });

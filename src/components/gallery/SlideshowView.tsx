@@ -1,9 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, ChevronRight, Pause, Play, Trash2, Maximize, Minimize } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
+import { ChevronLeft, ChevronRight, Pause, Play, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -18,13 +16,12 @@ interface Photo {
 
 interface Props {
   photos: Photo[];
-  canDelete?: boolean;
   speed?: number;
   transition?: string;
+  transitionDuration?: number;
 }
 
-export function SlideshowView({ photos, canDelete, speed = 4000, transition = "fade" }: Props) {
-  const router = useRouter();
+export function SlideshowView({ photos, speed = 4000, transition = "fade", transitionDuration = 500 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
@@ -77,18 +74,6 @@ export function SlideshowView({ photos, canDelete, speed = 4000, transition = "f
     }
   }
 
-  async function handleDelete() {
-    if (!confirm("Delete this photo?")) return;
-    const res = await fetch(`/api/photos/${photo.id}`, { method: "DELETE" });
-    if (res.ok) {
-      toast.success("Photo deleted");
-      router.refresh();
-      if (photos.length > 1) setIndex((i) => Math.max(0, i - 1));
-    } else {
-      toast.error("Failed to delete");
-    }
-  }
-
   if (photos.length === 0) return null;
 
   const transitionClass = ({
@@ -111,10 +96,8 @@ export function SlideshowView({ photos, canDelete, speed = 4000, transition = "f
         src={`/api/uploads/${photo.originalPath}`}
         alt={photo.filename}
         onLoad={() => setLoaded(true)}
-        className={cn(
-          "max-w-full max-h-full object-contain transition-all duration-700",
-          transitionClass
-        )}
+        style={{ transitionDuration: `${transitionDuration}ms` }}
+        className={cn("max-w-full max-h-full object-contain transition-all", transitionClass)}
       />
 
       {/* Overlay controls */}
@@ -142,16 +125,6 @@ export function SlideshowView({ photos, canDelete, speed = 4000, transition = "f
           >
             {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
           </Button>
-          {canDelete && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:bg-red-600/80"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-5 w-5" />
-            </Button>
-          )}
         </div>
       </div>
 

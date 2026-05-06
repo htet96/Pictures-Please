@@ -1,0 +1,1 @@
+ALTER TABLE "GlobalSettings" ADD COLUMN "transitionDuration" INTEGER NOT NULL DEFAULT 500;

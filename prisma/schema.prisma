@@ -50,6 +50,7 @@ model GlobalSettings {
   defaultAllowUserDelete Boolean @default(false)
   slideshowSpeed         Int     @default(4000)
   slideshowTransition    String  @default("fade")
+  transitionDuration     Int     @default(500)
   adminPasswordOnly      Boolean @default(false)
 }
 
