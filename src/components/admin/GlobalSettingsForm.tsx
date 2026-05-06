@@ -5,12 +5,36 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Settings {
   allowUserGalleries: boolean;
   defaultRequireApproval: boolean;
   defaultAllowUserDelete: boolean;
+  slideshowSpeed: number;
+  slideshowTransition: string;
 }
+
+const SPEED_OPTIONS = [
+  { value: 2000, label: "2 seconds" },
+  { value: 3000, label: "3 seconds" },
+  { value: 4000, label: "4 seconds" },
+  { value: 5000, label: "5 seconds" },
+  { value: 7000, label: "7 seconds" },
+  { value: 10000, label: "10 seconds" },
+];
+
+const TRANSITION_OPTIONS = [
+  { value: "fade", label: "Fade" },
+  { value: "zoom", label: "Zoom" },
+  { value: "slide", label: "Slide" },
+];
 
 export function GlobalSettingsForm({ settings }: { settings: Settings }) {
   const [form, setForm] = useState(settings);
@@ -56,11 +80,54 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
           </div>
           <Switch
             id={key}
-            checked={form[key as keyof Settings]}
+            checked={form[key as keyof typeof form] as boolean}
             onCheckedChange={(v) => setForm({ ...form, [key]: v })}
           />
         </div>
       ))}
+
+      <div className="space-y-4 rounded-lg border p-4">
+        <h3 className="font-medium text-sm">Slideshow &amp; Mosaic Playback</h3>
+
+        <div className="space-y-2">
+          <Label>Play Speed</Label>
+          <Select
+            value={String(form.slideshowSpeed)}
+            onValueChange={(v) => setForm({ ...form, slideshowSpeed: Number(v) })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SPEED_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Transition Animation (Slideshow)</Label>
+          <Select
+            value={form.slideshowTransition}
+            onValueChange={(v) => setForm({ ...form, slideshowTransition: v ?? form.slideshowTransition })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TRANSITION_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>
+                  {opt.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       <Button onClick={handleSave} disabled={saving}>
         {saving ? "Saving..." : "Save Settings"}
       </Button>

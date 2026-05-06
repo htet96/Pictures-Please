@@ -20,6 +20,8 @@ interface Props {
   photos: Photo[];
   displayMode: string;
   canDelete?: boolean;
+  slideshowSpeed?: number;
+  slideshowTransition?: string;
 }
 
 const MODES = [
@@ -28,7 +30,7 @@ const MODES = [
   { value: "SLIDESHOW", label: "Slideshow" },
 ];
 
-export function GalleryRenderer({ photos, displayMode, canDelete }: Props) {
+export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed, slideshowTransition }: Props) {
   const [activeMode, setActiveMode] = useState(displayMode);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
@@ -59,10 +61,10 @@ export function GalleryRenderer({ photos, displayMode, canDelete }: Props) {
       {/* MASONRY = Photos (uniform grid) */}
       {(activeMode === "MASONRY") && <GridView {...sharedProps} />}
       {/* GRID = Mosaic (8-per-page patterns with play/pause) */}
-      {(activeMode === "GRID") && <MosaicView {...sharedProps} />}
+      {(activeMode === "GRID") && <MosaicView {...sharedProps} speed={slideshowSpeed} />}
       {/* SLIDESHOW and CAROUSEL both use SlideshowView */}
       {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
-        <SlideshowView photos={photos} canDelete={canDelete} />
+        <SlideshowView photos={photos} canDelete={canDelete} speed={slideshowSpeed} transition={slideshowTransition} />
       )}
 
       {lightboxIndex !== null && (

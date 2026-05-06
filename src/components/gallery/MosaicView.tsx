@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { Play, Pause, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Play, Pause, ChevronLeft, ChevronRight, Trash2, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
@@ -20,6 +20,7 @@ interface Props {
   photos: Photo[];
   onPhotoClick: (index: number) => void;
   canDelete?: boolean;
+  speed?: number;
 }
 
 type Cell = { gridColumn: string; gridRow: string };
@@ -64,29 +65,55 @@ const PATTERNS: Cell[][] = [
 const PAGE_SIZE = 8;
 const CELL_HEIGHT = "clamp(80px, calc(22vw - 8px), 220px)";
 
-export function MosaicView({ photos, onPhotoClick, canDelete }: Props) {
+export function MosaicView({ photos, onPhotoClick, canDelete, speed = 4000 }: Props) {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
   const totalPages = Math.max(1, Math.ceil(photos.length / PAGE_SIZE));
   const [page, setPage] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [visible, setVisible] = useState(true);
+  const [fullscreen, setFullscreen] = useState(false);
+
+  const changePage = useCallback((newPage: number) => {
+    setVisible(false);
+    setTimeout(() => {
+      setPage(newPage);
+      setVisible(true);
+    }, 200);
+  }, []);
 
   const goNext = useCallback(
-    () => setPage((p) => (p + 1) % totalPages),
-    [totalPages]
+    () => changePage((page + 1) % totalPages),
+    [page, totalPages, changePage]
   );
   const goPrev = useCallback(
-    () => setPage((p) => (p === 0 ? totalPages - 1 : p - 1)),
-    [totalPages]
+    () => changePage(page === 0 ? totalPages - 1 : page - 1),
+    [page, totalPages, changePage]
   );
 
   useEffect(() => {
     if (!playing || totalPages <= 1) return;
-    const t = setInterval(goNext, 4000);
+    const t = setInterval(goNext, speed);
     return () => clearInterval(t);
-  }, [playing, goNext, totalPages]);
+  }, [playing, goNext, totalPages, speed]);
 
   // Reset to first page when photos change
   useEffect(() => { setPage(0); }, [photos.length]);
+
+  // Fullscreen API
+  useEffect(() => {
+    const onFsChange = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
 
   const pagePhotos = photos.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const pattern = PATTERNS[page % PATTERNS.length];
@@ -100,9 +127,9 @@ export function MosaicView({ photos, onPhotoClick, canDelete }: Props) {
   }
 
   return (
-    <div className="p-4">
+    <div ref={containerRef} className={cn("p-4", fullscreen && "bg-background min-h-screen flex flex-col justify-center")}>
       <div
-        className="w-full grid grid-cols-4 gap-2"
+        className={cn("w-full grid grid-cols-4 gap-2 transition-opacity duration-200", visible ? "opacity-100" : "opacity-0")}
         style={{ gridTemplateRows: `repeat(3, ${CELL_HEIGHT})` }}
       >
         {pagePhotos.map((photo, i) => (
@@ -136,11 +163,13 @@ export function MosaicView({ photos, onPhotoClick, canDelete }: Props) {
         ))}
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-3 mt-4">
+      <div className="flex items-center justify-center gap-3 mt-4">
+        {totalPages > 1 && (
           <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous page">
             <ChevronLeft className="h-4 w-4" />
           </Button>
+        )}
+        {totalPages > 1 && (
           <Button
             variant="outline"
             size="sm"
@@ -150,14 +179,26 @@ export function MosaicView({ photos, onPhotoClick, canDelete }: Props) {
             {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
             {playing ? "Pause" : "Play"}
           </Button>
+        )}
+        {totalPages > 1 && (
           <span className="text-sm text-muted-foreground tabular-nums">
             {page + 1} / {totalPages}
           </span>
+        )}
+        {totalPages > 1 && (
           <Button variant="outline" size="icon" onClick={goNext} aria-label="Next page">
             <ChevronRight className="h-4 w-4" />
           </Button>
-        </div>
-      )}
+        )}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={toggleFullscreen}
+          title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+        >
+          {fullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+        </Button>
+      </div>
     </div>
   );
 }

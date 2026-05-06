@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Pause, Play, Trash2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Pause, Play, Trash2, Maximize, Minimize } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,13 +19,17 @@ interface Photo {
 interface Props {
   photos: Photo[];
   canDelete?: boolean;
+  speed?: number;
+  transition?: string;
 }
 
-export function SlideshowView({ photos, canDelete }: Props) {
+export function SlideshowView({ photos, canDelete, speed = 4000, transition = "fade" }: Props) {
   const router = useRouter();
+  const containerRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [playing, setPlaying] = useState(true);
   const [loaded, setLoaded] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   const photo = photos[index];
 
@@ -41,9 +45,9 @@ export function SlideshowView({ photos, canDelete }: Props) {
 
   useEffect(() => {
     if (!playing || photos.length <= 1) return;
-    const t = setInterval(next, 4000);
+    const t = setInterval(next, speed);
     return () => clearInterval(t);
-  }, [playing, next, photos.length]);
+  }, [playing, next, photos.length, speed]);
 
   // Touch swipe
   useEffect(() => {
@@ -57,6 +61,21 @@ export function SlideshowView({ photos, canDelete }: Props) {
     window.addEventListener("touchend", onEnd);
     return () => { window.removeEventListener("touchstart", onStart); window.removeEventListener("touchend", onEnd); };
   }, [next, prev]);
+
+  // Fullscreen API
+  useEffect(() => {
+    const onFsChange = () => setFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
+
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      containerRef.current?.requestFullscreen();
+    } else {
+      document.exitFullscreen();
+    }
+  }
 
   async function handleDelete() {
     if (!confirm("Delete this photo?")) return;
@@ -72,8 +91,17 @@ export function SlideshowView({ photos, canDelete }: Props) {
 
   if (photos.length === 0) return null;
 
+  const transitionClass = {
+    fade: loaded ? "opacity-100" : "opacity-0",
+    zoom: loaded ? "opacity-100 scale-100" : "opacity-0 scale-95",
+    slide: loaded ? "opacity-100 translate-x-0" : "opacity-0 translate-x-8",
+  }[transition] ?? (loaded ? "opacity-100" : "opacity-0");
+
   return (
-    <div className="relative h-[calc(100vh-56px)] bg-black flex items-center justify-center select-none">
+    <div
+      ref={containerRef}
+      className="relative h-[calc(100vh-56px)] bg-black flex items-center justify-center select-none"
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         key={photo.id}
@@ -81,8 +109,8 @@ export function SlideshowView({ photos, canDelete }: Props) {
         alt={photo.filename}
         onLoad={() => setLoaded(true)}
         className={cn(
-          "max-w-full max-h-full object-contain transition-opacity duration-700",
-          loaded ? "opacity-100" : "opacity-0"
+          "max-w-full max-h-full object-contain transition-all duration-700",
+          transitionClass
         )}
       />
 
@@ -102,6 +130,15 @@ export function SlideshowView({ photos, canDelete }: Props) {
               {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-white hover:bg-white/20"
+            onClick={toggleFullscreen}
+            title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+          >
+            {fullscreen ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+          </Button>
           {canDelete && (
             <Button
               variant="ghost"

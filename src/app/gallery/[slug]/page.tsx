@@ -8,22 +8,29 @@ import { PasswordGate } from "@/components/shared/PasswordGate";
 import { QRCodeButton } from "@/components/qr/QRCodeButton";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Upload, ArrowLeft } from "lucide-react";
+import { Upload } from "lucide-react";
 
 type Props = { params: Promise<{ slug: string }> };
 
 export default async function GalleryPage({ params }: Props) {
   const { slug } = await params;
 
-  const gallery = await prisma.gallery.findUnique({
-    where: { slug },
-    include: {
-      photos: {
-        where: { status: "APPROVED" },
-        orderBy: { createdAt: "asc" },
+  const [gallery, settings] = await Promise.all([
+    prisma.gallery.findUnique({
+      where: { slug },
+      include: {
+        photos: {
+          where: { status: "APPROVED" },
+          orderBy: { createdAt: "asc" },
+        },
       },
-    },
-  });
+    }),
+    prisma.globalSettings.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton" },
+      update: {},
+    }),
+  ]);
 
   if (!gallery) notFound();
 
@@ -41,11 +48,13 @@ export default async function GalleryPage({ params }: Props) {
       <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Link href="/">
-              <Button variant="ghost" size="icon" className="shrink-0">
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
+            <Link href="/" className="font-semibold text-sm shrink-0 hover:opacity-80 transition-opacity hidden sm:block">
+              📸 Pictures Please 📸
             </Link>
+            <Link href="/" className="font-semibold text-sm shrink-0 hover:opacity-80 transition-opacity sm:hidden">
+              📸
+            </Link>
+            <span className="text-muted-foreground hidden sm:block">/</span>
             <div className="min-w-0">
               <h1 className="font-semibold truncate">{gallery.name}</h1>
               {gallery.description && (
@@ -70,7 +79,7 @@ export default async function GalleryPage({ params }: Props) {
             )}
             {admin && (
               <Link href={`/admin/galleries/${gallery.id}`}>
-                <Button size="sm" variant="outline">Manage</Button>
+                <Button size="sm" variant="outline">Admin Panel</Button>
               </Link>
             )}
           </div>
@@ -95,6 +104,8 @@ export default async function GalleryPage({ params }: Props) {
             photos={gallery.photos}
             displayMode={gallery.displayMode}
             canDelete={admin || gallery.allowUserDelete}
+            slideshowSpeed={settings.slideshowSpeed}
+            slideshowTransition={settings.slideshowTransition}
           />
         )}
       </main>

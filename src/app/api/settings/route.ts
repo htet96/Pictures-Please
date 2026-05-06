@@ -29,6 +29,8 @@ export async function PATCH(req: NextRequest) {
       allowUserGalleries: body.allowUserGalleries,
       defaultRequireApproval: body.defaultRequireApproval,
       defaultAllowUserDelete: body.defaultAllowUserDelete,
+      slideshowSpeed: body.slideshowSpeed,
+      slideshowTransition: body.slideshowTransition,
     },
   });
   return NextResponse.json(settings);
