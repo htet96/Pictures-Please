@@ -4,15 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { isAdmin } from "@/lib/auth";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Images, Lock, Plus } from "lucide-react";
+import { Images, Plus } from "lucide-react";
+import { GalleryGrid } from "@/components/home/GalleryGrid";
 
 export default async function Home() {
   const admin = await isAdmin();
@@ -35,79 +28,79 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b bg-card">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <header className="border-b border-border/60 bg-card/80 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/">
-            <span className="font-semibold text-lg">📸 Pictures Please 📸</span>
+            <span className="font-display text-2xl font-semibold tracking-wide text-foreground hover:text-primary transition-colors">
+              Pictures Please
+            </span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {canCreate && (
               <Link href="/gallery/create">
-                <Button size="sm" variant="outline">
-                  <Plus className="h-4 w-4 mr-1" /> New Gallery
+                <Button size="sm" variant="outline" className="border-border hover:border-primary hover:text-primary transition-colors">
+                  <Plus className="h-4 w-4 mr-1.5" /> New Gallery
                 </Button>
               </Link>
             )}
             {admin ? (
               <Link href="/admin">
-                <Button size="sm">Admin Panel</Button>
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90">
+                  Admin Panel
+                </Button>
               </Link>
             ) : (
               <Link href="/login">
-                <Button size="sm" variant="ghost">Admin</Button>
+                <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-primary">
+                  Admin
+                </Button>
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 py-8 w-full">
-        <h1 className="text-3xl font-bold mb-2">Galleries</h1>
-        <p className="text-muted-foreground mb-8">Browse and explore photo collections</p>
+      <main className="flex-1 max-w-6xl mx-auto px-6 py-12 w-full">
+        {/* Grid-breaking decorative watermark */}
+        <div className="relative mb-12">
+          <span
+            aria-hidden="true"
+            className="font-display pointer-events-none select-none absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 origin-center text-[11vw] leading-none font-bold text-foreground/[0.04] whitespace-nowrap"
+          >
+            PICTURES
+          </span>
+          <div className="relative pl-0">
+            <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase mb-3">
+              — Collections
+            </p>
+            <h1 className="font-display text-5xl font-semibold text-foreground leading-tight">
+              Galleries
+            </h1>
+            <div className="mt-4 h-px w-12 bg-primary" />
+          </div>
+        </div>
 
         {galleries.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <Images className="h-16 w-16 mx-auto mb-4 opacity-20" />
-            <p className="text-lg">No galleries yet.</p>
+          <div className="text-center py-24 text-muted-foreground">
+            <Images className="h-14 w-14 mx-auto mb-5 opacity-20" />
+            <p className="font-display text-3xl mb-2 text-foreground/60">No galleries yet.</p>
+            <p className="text-sm text-muted-foreground/60">Nothing to show right now.</p>
             {canCreate && (
               <Link href="/gallery/create">
-                <Button className="mt-4">Create First Gallery</Button>
+                <Button className="mt-6 bg-primary text-primary-foreground hover:bg-primary/90">
+                  Create First Gallery
+                </Button>
               </Link>
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleries.map((gallery) => (
-              <Link key={gallery.id} href={`/gallery/${gallery.slug}`} className="group">
-                <Card className="h-full transition-shadow hover:shadow-lg">
-                  <CardHeader>
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-1">
-                        {gallery.name}
-                      </CardTitle>
-                      {gallery.password && (
-                        <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-                      )}
-                    </div>
-                    {gallery.description && (
-                      <CardDescription className="line-clamp-2">
-                        {gallery.description}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
-                        {gallery._count.photos} photo{gallery._count.photos !== 1 ? "s" : ""}
-                      </Badge>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            ))}
-          </div>
+          <GalleryGrid galleries={galleries} />
         )}
       </main>
+
+      <footer className="border-t border-border/30 py-6 text-center text-xs text-muted-foreground/40 tracking-widest uppercase">
+        Pictures Please
+      </footer>
     </div>
   );
 }

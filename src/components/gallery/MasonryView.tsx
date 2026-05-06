@@ -1,6 +1,7 @@
 "use client";
 
 import Masonry from "react-masonry-css";
+import { motion } from "framer-motion";
 import { PhotoCard } from "./PhotoCard";
 
 interface Photo {
@@ -34,12 +35,18 @@ export function MasonryView({ photos, onPhotoClick, canDelete }: Props) {
         columnClassName="flex flex-col gap-2 sm:gap-4"
       >
         {photos.map((photo, i) => (
-          <PhotoCard
+          <motion.div
             key={photo.id}
-            photo={photo}
-            onClick={() => onPhotoClick(i)}
-            canDelete={canDelete}
-          />
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: Math.min(i * 0.05, 0.6) }}
+          >
+            <PhotoCard
+              photo={photo}
+              onClick={() => onPhotoClick(i)}
+              canDelete={canDelete}
+            />
+          </motion.div>
         ))}
       </Masonry>
     </div>

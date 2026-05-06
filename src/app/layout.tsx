@@ -1,11 +1,19 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Cormorant_Garamond, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const displayFont = Cormorant_Garamond({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["300", "400", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+const bodyFont = Plus_Jakarta_Sans({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -25,7 +33,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
         <Toaster position="bottom-right" richColors />
