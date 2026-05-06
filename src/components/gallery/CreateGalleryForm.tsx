@@ -8,13 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 function slugify(text: string) {
   return text
@@ -32,7 +25,6 @@ export function CreateGalleryForm({ isAdmin }: { isAdmin: boolean }) {
     name: "",
     slug: "",
     description: "",
-    displayMode: "MASONRY",
     password: "",
     requireApproval: true,
     allowUserDelete: false,
@@ -105,23 +97,6 @@ export function CreateGalleryForm({ isAdmin }: { isAdmin: boolean }) {
           placeholder="Optional description..."
           rows={3}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label>Display Mode</Label>
-        <Select
-          value={form.displayMode}
-          onValueChange={(v) => setForm({ ...form, displayMode: v ?? form.displayMode })}
-        >
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="MASONRY">Photos</SelectItem>
-            <SelectItem value="GRID">Mosaic</SelectItem>
-            <SelectItem value="SLIDESHOW">Slideshow</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div className="space-y-2">
