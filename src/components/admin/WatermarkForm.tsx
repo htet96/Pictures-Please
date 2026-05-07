@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import type { ReactNode } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -34,6 +35,22 @@ const POSITION_PRESETS = [
 
 function matchesPreset(x: number, y: number) {
   return POSITION_PRESETS.findIndex((p) => p.x === x && p.y === y);
+}
+
+function renderMarkdown(text: string): ReactNode[] {
+  const lines = text.split("\n");
+  return lines.flatMap((line, lineIdx) => {
+    const tokens = line.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g);
+    const parts: ReactNode[] = tokens.map((token, i) => {
+      if (token.startsWith("**") && token.endsWith("**"))
+        return <strong key={`${lineIdx}-${i}`}>{token.slice(2, -2)}</strong>;
+      if (token.startsWith("*") && token.endsWith("*"))
+        return <em key={`${lineIdx}-${i}`}>{token.slice(1, -1)}</em>;
+      return token;
+    });
+    if (lineIdx < lines.length - 1) parts.push(<br key={`br-${lineIdx}`} />);
+    return parts;
+  });
 }
 
 export function WatermarkForm({ settings: initial }: { settings: WatermarkSettings }) {
@@ -159,7 +176,9 @@ export function WatermarkForm({ settings: initial }: { settings: WatermarkSettin
                 placeholder="PICTURES"
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono resize-y focus:outline-none focus:ring-1 focus:ring-ring"
               />
-              <p className="text-xs text-muted-foreground mt-1">Newlines are preserved. Use plain text.</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Supports <code className="font-mono">**bold**</code>, <code className="font-mono">*italic*</code>, and line breaks.
+              </p>
             </div>
           )}
 
@@ -347,14 +366,14 @@ export function WatermarkForm({ settings: initial }: { settings: WatermarkSettin
               />
             ) : s.watermarkType === "text" && s.watermarkText ? (
               <span
-                className="font-display leading-none font-bold whitespace-pre-wrap"
+                className="font-display leading-none font-bold whitespace-nowrap"
                 style={{
                   ...watermarkStyle,
                   fontSize: `${s.watermarkSize * 0.4}cqw`,
                   color: "currentColor",
                 }}
               >
-                {s.watermarkText}
+                {renderMarkdown(s.watermarkText)}
               </span>
             ) : null
           )}

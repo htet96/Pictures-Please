@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 interface WatermarkSettings {
   watermarkEnabled: boolean;
   watermarkType: string;
@@ -12,6 +14,22 @@ interface WatermarkSettings {
 
 interface Props {
   settings: WatermarkSettings;
+}
+
+function renderMarkdown(text: string): ReactNode[] {
+  const lines = text.split("\n");
+  return lines.flatMap((line, lineIdx) => {
+    const tokens = line.split(/(\*\*[^*\n]+\*\*|\*[^*\n]+\*)/g);
+    const parts: ReactNode[] = tokens.map((token, i) => {
+      if (token.startsWith("**") && token.endsWith("**"))
+        return <strong key={`${lineIdx}-${i}`}>{token.slice(2, -2)}</strong>;
+      if (token.startsWith("*") && token.endsWith("*"))
+        return <em key={`${lineIdx}-${i}`}>{token.slice(1, -1)}</em>;
+      return token;
+    });
+    if (lineIdx < lines.length - 1) parts.push(<br key={`br-${lineIdx}`} />);
+    return parts;
+  });
 }
 
 export function WatermarkOverlay({ settings }: Props) {
@@ -42,14 +60,14 @@ export function WatermarkOverlay({ settings }: Props) {
   return (
     <span
       aria-hidden="true"
-      className="font-display leading-none font-bold whitespace-pre-wrap"
+      className="font-display leading-none font-bold whitespace-nowrap"
       style={{
         ...style,
         fontSize: `${settings.watermarkSize}vw`,
         color: "currentColor",
       }}
     >
-      {settings.watermarkText}
+      {renderMarkdown(settings.watermarkText)}
     </span>
   );
 }
