@@ -4,23 +4,26 @@ A self-hosted photo gallery web application built with Next.js, deployed via Doc
 
 ## Features
 
-- **Multiple display modes**: Masonry, Mosaic and Slideshow
-- **Photo upload** configurable per gallery
+- **Multiple display modes**: Masonry, Mosaic, and Slideshow — switchable per visit
+- **Lightbox viewer**: full-screen photo browsing with keyboard and swipe navigation
+- **Photo upload**: configurable per gallery with optional approval workflow
 - **QR code** generation for upload page links (dynamic — no hardcoded domains)
 - **Admin panel**: approve/reject photos, manage galleries, global settings
 - **Gallery passwords**: optional per-gallery password protection
-- **Approval workflow**: configurable per gallery (bypass available)
+- **Gallery visibility**: show or hide individual galleries from the public listing
+- **User-created galleries**: optionally allow any visitor to create a new gallery
+- **Dark/light mode**: theme toggle available site-wide
 - **Mobile-friendly**: responsive design, touch swipe gestures, iOS Safari compatible
 - **Fully self-hosted**: PostgreSQL + local filesystem storage, no cloud dependencies
 
 ### Admin Panel
-![alt text](image.png)
+![alt text](assets/admin_panel_sample.png)
 
 ### Landing Page
-![alt text](image-1.png)
+![alt text](assets/landing_page_sample.png)
 
 ### Gallery
-![alt text](image-3.png)
+![alt text](assets/gallery_photos_sample.png)
 
 ## Quick Start
 
@@ -39,6 +42,9 @@ ADMIN_USERNAME=admin
 ADMIN_PASSWORD=your_admin_password
 SESSION_SECRET=your_random_32_char_secret_string
 APP_PORT=3000
+
+# Optional: URL of a custom favicon image (leave blank to use the default camera icon)
+# FAVICON_URL="https://example.com/my-icon.png"
 ```
 
 ### 2. Deploy with Docker Compose
@@ -70,14 +76,14 @@ Navigate to `/login` and sign in with your `ADMIN_USERNAME` and `ADMIN_PASSWORD`
 - **Database**: PostgreSQL 16 (via Prisma ORM + pg adapter)
 - **Storage**: Local filesystem Docker volume
 - **Auth**: iron-session (encrypted cookies)
-- **Image processing**: Sharp (server-side thumbnails)
+- **Image processing**: Sharp (server-side thumbnails), CropperJS (client-side crop)
+- **UI**: shadcn/ui, Tailwind CSS, Framer Motion
 
 ## Development
 
 ```bash
 npm install
 npx prisma generate
-# Set DATABASE_URL in .env pointing to local Postgres
 npx prisma migrate dev
 npm run dev
 ```
@@ -85,9 +91,9 @@ npm run dev
 ## Updating
 
 ```bash
-docker compose --env-file .env.prod up -d --build
+docker compose -d --build
 ```
-or
+If reloading .env file:
 ```bash
 docker compose restart
 ```
