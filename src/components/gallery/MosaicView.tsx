@@ -67,16 +67,18 @@ function shuffle<T>(arr: T[]): T[] {
 
 export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "fade", transitionDuration = 500 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [shuffledPhotos, setShuffledPhotos] = useState(() => shuffle(photos));
   const [page, setPage] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
+  const [showControls, setShowControls] = useState(true);
 
   const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / PAGE_SIZE));
   const fadeDuration = Math.round(transitionDuration / 2);
 
-  // Reshuffle and reset when the photos list changes
   useEffect(() => {
     setShuffledPhotos(shuffle(photos));
     setPage(0);
@@ -94,7 +96,7 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
 
   const goNext = useCallback(() => {
     const next = (page + 1) % totalPages;
-    changePage(next, next === 0); // reshuffle when wrapping to first page
+    changePage(next, next === 0);
   }, [page, totalPages, changePage]);
 
   const goPrev = useCallback(() => {
@@ -107,12 +109,30 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
     return () => clearInterval(t);
   }, [playing, goNext, totalPages, speed]);
 
-  // Fullscreen API
   useEffect(() => {
     const onFsChange = () => setFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
+
+  // Manage controls visibility on fullscreen enter/exit
+  useEffect(() => {
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    if (fullscreen) {
+      hideTimerRef.current = setTimeout(() => setShowControls(false), 2500);
+    } else {
+      setShowControls(true);
+    }
+  }, [fullscreen]);
+
+  useEffect(() => () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); }, []);
+
+  function handleMouseMove() {
+    if (!fullscreen) return;
+    setShowControls(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    hideTimerRef.current = setTimeout(() => setShowControls(false), 2500);
+  }
 
   function toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -125,9 +145,10 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
   const pagePhotos = shuffledPhotos.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const pattern = PATTERNS[page % PATTERNS.length];
 
-  // In fullscreen: fill viewport minus ~72px for the controls bar
+  // Fullscreen: 80px top + 80px bottom margin so grid is truly centered;
+  // controls (≈60px) overlay within the bottom 80px.
   const cellHeight = fullscreen
-    ? "calc((100vh - 72px) / 4)"
+    ? "calc((100vh - 160px) / 4)"
     : "clamp(70px, calc(22vw - 8px), 220px)";
 
   const gridVisibleClass = ({
@@ -139,10 +160,68 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
     rise:  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
   } as Record<string, string>)[transition] ?? (visible ? "opacity-100" : "opacity-0");
 
+  const controls = (
+    <div
+      className={cn(
+        "flex items-center justify-center gap-3 py-3 px-4",
+        "bg-card/85 backdrop-blur-md border-t border-border/40",
+        "transition-all duration-300",
+        fullscreen
+          ? cn(
+              "absolute bottom-0 left-0 right-0",
+              showControls
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 translate-y-2 pointer-events-none"
+            )
+          : "fixed bottom-0 left-0 right-0 z-30"
+      )}
+    >
+      {totalPages > 1 && (
+        <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous page">
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+      )}
+      {totalPages > 1 && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2 min-w-[90px]"
+          onClick={() => setPlaying((p) => !p)}
+        >
+          {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+          {playing ? "Pause" : "Play"}
+        </Button>
+      )}
+      {totalPages > 1 && (
+        <span className="text-sm text-muted-foreground tabular-nums">
+          {page + 1} / {totalPages}
+        </span>
+      )}
+      {totalPages > 1 && (
+        <Button variant="outline" size="icon" onClick={goNext} aria-label="Next page">
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
+      <Button
+        variant="outline"
+        size="icon"
+        onClick={toggleFullscreen}
+        title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+      >
+        {fullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+      </Button>
+    </div>
+  );
+
   return (
     <div
       ref={containerRef}
-      className={cn("p-4", fullscreen && "bg-background flex flex-col justify-center min-h-screen")}
+      onMouseMove={handleMouseMove}
+      className={cn(
+        fullscreen
+          ? "bg-background flex flex-col items-center justify-center h-screen relative px-4"
+          : "p-4 pb-24"
+      )}
     >
       <div
         className={cn("w-full grid grid-cols-4 gap-2 transition-all", gridVisibleClass)}
@@ -173,42 +252,7 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
         ))}
       </div>
 
-      <div className="flex items-center justify-center gap-3 mt-4">
-        {totalPages > 1 && (
-          <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous page">
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        )}
-        {totalPages > 1 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="gap-2 min-w-[90px]"
-            onClick={() => setPlaying((p) => !p)}
-          >
-            {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {playing ? "Pause" : "Play"}
-          </Button>
-        )}
-        {totalPages > 1 && (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {page + 1} / {totalPages}
-          </span>
-        )}
-        {totalPages > 1 && (
-          <Button variant="outline" size="icon" onClick={goNext} aria-label="Next page">
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={toggleFullscreen}
-          title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
-        >
-          {fullscreen ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-        </Button>
-      </div>
+      {controls}
     </div>
   );
 }
