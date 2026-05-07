@@ -40,6 +40,8 @@ export async function PATCH(req: NextRequest) {
   if (body.watermarkY !== undefined) data.watermarkY = body.watermarkY;
   if (body.watermarkRotation !== undefined) data.watermarkRotation = body.watermarkRotation;
   if (body.watermarkSize !== undefined) data.watermarkSize = body.watermarkSize;
+  if (body.linksPublic !== undefined) data.linksPublic = body.linksPublic;
+  if (body.backgroundTheme !== undefined) data.backgroundTheme = body.backgroundTheme;
 
   const settings = await prisma.globalSettings.update({
     where: { id: "singleton" },

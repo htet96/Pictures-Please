@@ -30,10 +30,12 @@ export default async function Home() {
   ]);
 
   const canCreate = admin || settings.allowUserGalleries;
+  // Only show links to public if linksPublic is true; always show to admin
+  const visibleLinks = settings.linksPublic || admin ? outgoingLinks : [];
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      <HomeBackground />
+      <HomeBackground theme={settings.backgroundTheme} />
 
       <header className="border-b border-border/60 bg-card/80 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -64,7 +66,7 @@ export default async function Home() {
                 </Button>
               </Link>
             )}
-            <KebabMenu links={outgoingLinks} />
+            <KebabMenu links={visibleLinks} />
           </div>
         </div>
       </header>

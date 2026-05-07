@@ -217,3 +217,39 @@
   animation: blob-drift-3 18s ease-in-out infinite;
   animation-delay: -14s;
 }
+
+/* ─── Background theme: aurora (green/teal/purple) ─────── */
+:root[data-bg-theme="aurora"] {
+  --blob-1: oklch(0.70 0.14 165 / 0.10);
+  --blob-2: oklch(0.60 0.12 290 / 0.07);
+  --blob-3: oklch(0.65 0.10 145 / 0.07);
+}
+:root.light[data-bg-theme="aurora"] {
+  --blob-1: oklch(0.83 0.09 165 / 0.40);
+  --blob-2: oklch(0.76 0.09 290 / 0.30);
+  --blob-3: oklch(0.80 0.08 145 / 0.28);
+}
+
+/* ─── Background theme: ocean (blue/cyan/teal) ──────────── */
+:root[data-bg-theme="ocean"] {
+  --blob-1: oklch(0.65 0.14 225 / 0.10);
+  --blob-2: oklch(0.68 0.12 200 / 0.07);
+  --blob-3: oklch(0.60 0.11 245 / 0.07);
+}
+:root.light[data-bg-theme="ocean"] {
+  --blob-1: oklch(0.82 0.09 225 / 0.40);
+  --blob-2: oklch(0.84 0.08 200 / 0.34);
+  --blob-3: oklch(0.78 0.08 245 / 0.28);
+}
+
+/* ─── Background theme: dusk (purple/pink/indigo) ───────── */
+:root[data-bg-theme="dusk"] {
+  --blob-1: oklch(0.63 0.14 305 / 0.10);
+  --blob-2: oklch(0.68 0.12 335 / 0.07);
+  --blob-3: oklch(0.58 0.11 270 / 0.08);
+}
+:root.light[data-bg-theme="dusk"] {
+  --blob-1: oklch(0.80 0.09 305 / 0.38);
+  --blob-2: oklch(0.82 0.08 335 / 0.32);
+  --blob-3: oklch(0.77 0.08 270 / 0.28);
+}

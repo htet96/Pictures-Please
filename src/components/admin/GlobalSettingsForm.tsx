@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -21,6 +22,7 @@ interface Settings {
   slideshowSpeed: number;
   slideshowTransition: string;
   transitionDuration: number;
+  backgroundTheme: string;
 }
 
 const SPEED_OPTIONS = [
@@ -39,6 +41,13 @@ const TRANSITION_OPTIONS = [
   { value: "blur", label: "Blur Fade" },
   { value: "drop", label: "Drop Down" },
   { value: "rise", label: "Rise Up" },
+];
+
+const BG_THEMES = [
+  { value: "ember",  label: "Ember",  dark: ["oklch(0.78 0.14 75)", "oklch(0.65 0.10 55)", "oklch(0.72 0.11 40)"] },
+  { value: "aurora", label: "Aurora", dark: ["oklch(0.70 0.14 165)", "oklch(0.60 0.12 290)", "oklch(0.65 0.10 145)"] },
+  { value: "ocean",  label: "Ocean",  dark: ["oklch(0.65 0.14 225)", "oklch(0.68 0.12 200)", "oklch(0.60 0.11 245)"] },
+  { value: "dusk",   label: "Dusk",   dark: ["oklch(0.63 0.14 305)", "oklch(0.68 0.12 335)", "oklch(0.58 0.11 270)"] },
 ];
 
 export function GlobalSettingsForm({ settings }: { settings: Settings }) {
@@ -95,6 +104,44 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
           />
         </div>
       ))}
+
+      {/* Background theme */}
+      <div className="space-y-3 rounded-lg border p-4">
+        <h3 className="font-medium text-sm">Landing Page Background</h3>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {BG_THEMES.map((theme) => (
+            <button
+              key={theme.value}
+              onClick={() => setForm({ ...form, backgroundTheme: theme.value })}
+              className={cn(
+                "flex flex-col items-center gap-2 rounded-lg border p-3 transition-all",
+                form.backgroundTheme === theme.value
+                  ? "border-primary bg-primary/[0.08]"
+                  : "border-border bg-muted/20 hover:border-primary/50"
+              )}
+            >
+              {/* Swatch */}
+              <div className="relative w-full h-10 rounded overflow-hidden bg-background/50">
+                {theme.dark.map((color, i) => (
+                  <div
+                    key={i}
+                    className="absolute rounded-full"
+                    style={{
+                      width: i === 0 ? "70%" : i === 1 ? "55%" : "45%",
+                      height: i === 0 ? "70%" : i === 1 ? "55%" : "45%",
+                      background: `radial-gradient(circle, ${color} / 0.6) 0%, transparent 70%)`,
+                      top: i === 0 ? "-10%" : i === 1 ? "20%" : "40%",
+                      left: i === 0 ? "-5%" : i === 1 ? "40%" : "20%",
+                      filter: "blur(8px)",
+                    }}
+                  />
+                ))}
+              </div>
+              <span className="text-xs font-medium">{theme.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-4 rounded-lg border p-4">
         <h3 className="font-medium text-sm">Slideshow &amp; Mosaic Playback</h3>

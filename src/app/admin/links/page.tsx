@@ -4,7 +4,10 @@ import { prisma } from "@/lib/prisma";
 import { LinksForm } from "@/components/admin/LinksForm";
 
 export default async function LinksPage() {
-  const links = await prisma.outgoingLink.findMany({ orderBy: { order: "asc" } });
+  const [links, settings] = await Promise.all([
+    prisma.outgoingLink.findMany({ orderBy: { order: "asc" } }),
+    prisma.globalSettings.upsert({ where: { id: "singleton" }, create: { id: "singleton" }, update: {} }),
+  ]);
 
   return (
     <div className="max-w-lg">
@@ -15,7 +18,7 @@ export default async function LinksPage() {
           Links shown in the header kebab menu. Opens in a new tab.
         </p>
       </div>
-      <LinksForm initialLinks={links} />
+      <LinksForm initialLinks={links} linksPublic={settings.linksPublic} />
     </div>
   );
 }

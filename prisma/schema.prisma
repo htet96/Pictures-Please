@@ -61,6 +61,8 @@ model GlobalSettings {
   watermarkY             Int     @default(50)
   watermarkRotation      Int     @default(-90)
   watermarkSize          Int     @default(11)
+  linksPublic            Boolean @default(true)
+  backgroundTheme        String  @default("ember")
 }
 
 model OutgoingLink {

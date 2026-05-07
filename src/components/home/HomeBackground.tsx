@@ -1,6 +1,19 @@
 "use client";
 
-export function HomeBackground() {
+import { useEffect } from "react";
+
+export function HomeBackground({ theme }: { theme: string }) {
+  useEffect(() => {
+    if (theme && theme !== "ember") {
+      document.documentElement.dataset.bgTheme = theme;
+    } else {
+      delete document.documentElement.dataset.bgTheme;
+    }
+    return () => {
+      delete document.documentElement.dataset.bgTheme;
+    };
+  }, [theme]);
+
   return (
     <div
       aria-hidden="true"
