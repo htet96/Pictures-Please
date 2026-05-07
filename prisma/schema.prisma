@@ -63,6 +63,8 @@ model GlobalSettings {
   watermarkSize          Int     @default(11)
   linksPublic            Boolean @default(true)
   backgroundTheme        String  @default("ember")
+  backgroundAnimation    String  @default("drift")
+  backgroundSpeed        Int     @default(3)
 }
 
 model OutgoingLink {

@@ -2,17 +2,48 @@
 
 import { useEffect } from "react";
 
-export function HomeBackground({ theme }: { theme: string }) {
+const SPEED_MAP: Record<number, number> = {
+  1: 3.0,
+  2: 2.0,
+  3: 1.0,
+  4: 0.55,
+  5: 0.3,
+};
+
+interface Props {
+  theme: string;
+  animation: string;
+  speed: number;
+}
+
+export function HomeBackground({ theme, animation, speed }: Props) {
   useEffect(() => {
+    const html = document.documentElement;
+
+    // Theme
     if (theme && theme !== "ember") {
-      document.documentElement.dataset.bgTheme = theme;
+      html.dataset.bgTheme = theme;
     } else {
-      delete document.documentElement.dataset.bgTheme;
+      delete html.dataset.bgTheme;
     }
+
+    // Animation
+    if (animation && animation !== "drift") {
+      html.dataset.bgAnim = animation;
+    } else {
+      delete html.dataset.bgAnim;
+    }
+
+    // Speed
+    const multiplier = SPEED_MAP[speed] ?? 1;
+    html.style.setProperty("--blob-speed", String(multiplier));
+
     return () => {
-      delete document.documentElement.dataset.bgTheme;
+      delete html.dataset.bgTheme;
+      delete html.dataset.bgAnim;
+      html.style.removeProperty("--blob-speed");
     };
-  }, [theme]);
+  }, [theme, animation, speed]);
 
   return (
     <div

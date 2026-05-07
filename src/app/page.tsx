@@ -35,7 +35,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen flex flex-col relative">
-      <HomeBackground theme={settings.backgroundTheme} />
+      <HomeBackground theme={settings.backgroundTheme} animation={settings.backgroundAnimation} speed={settings.backgroundSpeed} />
 
       <header className="border-b border-border/60 bg-card/80 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">

@@ -177,6 +177,12 @@
 }
 
 /* ─── Background blob animations ────────────────────────── */
+
+/* Speed multiplier: set --blob-speed on any ancestor to scale durations.
+   1.0 = normal, 3.0 = very slow, 0.3 = lively */
+:root { --blob-speed: 1; }
+
+/* ── Drift (default) ── */
 @keyframes blob-drift-1 {
   0%,  100% { transform: translate(0%,   0%)  scale(1);    }
   33%        { transform: translate(4%,  -7%)  scale(1.06); }
@@ -192,6 +198,59 @@
   50%        { transform: translate(3%,  7%)   scale(1.04); }
 }
 
+/* ── Breathe — gentle scale + opacity, ultra-calm ── */
+@keyframes blob-breathe-1 {
+  0%,  100% { transform: scale(1);    opacity: 1;    }
+  50%        { transform: scale(1.14); opacity: 0.82; }
+}
+@keyframes blob-breathe-2 {
+  0%,  100% { transform: scale(1);    opacity: 1;    }
+  50%        { transform: scale(0.87); opacity: 0.78; }
+}
+@keyframes blob-breathe-3 {
+  0%,  100% { transform: scale(1);    opacity: 1;    }
+  50%        { transform: scale(1.09); opacity: 0.88; }
+}
+
+/* ── Float — vertical sine rise ── */
+@keyframes blob-float-1 {
+  0%,  100% { transform: translateY(0%)  scale(1);    }
+  40%        { transform: translateY(-7%) scale(1.05); }
+  70%        { transform: translateY(4%)  scale(0.97); }
+}
+@keyframes blob-float-2 {
+  0%,  100% { transform: translateY(0%)  scale(1);    }
+  35%        { transform: translateY(8%)  scale(0.94); }
+  70%        { transform: translateY(-5%) scale(1.05); }
+}
+@keyframes blob-float-3 {
+  0%,  100% { transform: translateY(0%)  scale(1);    }
+  50%        { transform: translateY(-6%) scale(1.03); }
+}
+
+/* ── Orbit — slow elliptical path ── */
+@keyframes blob-orbit-1 {
+  0%   { transform: translate(0%,  0%)  scale(1);    }
+  25%  { transform: translate(5%, -4%)  scale(1.04); }
+  50%  { transform: translate(8%,  3%)  scale(0.97); }
+  75%  { transform: translate(3%,  7%)  scale(1.02); }
+  100% { transform: translate(0%,  0%)  scale(1);    }
+}
+@keyframes blob-orbit-2 {
+  0%   { transform: translate(0%,  0%)   scale(1);    }
+  25%  { transform: translate(-5%, 5%)   scale(0.95); }
+  50%  { transform: translate(-8%, -3%)  scale(1.06); }
+  75%  { transform: translate(-2%, -7%)  scale(0.98); }
+  100% { transform: translate(0%,  0%)   scale(1);    }
+}
+@keyframes blob-orbit-3 {
+  0%   { transform: translate(0%,  0%)  scale(1);    }
+  25%  { transform: translate(4%,  6%)  scale(1.03); }
+  50%  { transform: translate(-5%, 7%)  scale(0.96); }
+  75%  { transform: translate(-6%, -3%) scale(1.04); }
+  100% { transform: translate(0%,  0%)  scale(1);    }
+}
+
 .home-blob {
   position: absolute;
   border-radius: 50%;
@@ -202,12 +261,14 @@
   top: -15%; left: -12%;
   background: radial-gradient(circle, var(--blob-1) 0%, transparent 65%);
   animation: blob-drift-1 20s ease-in-out infinite;
+  animation-duration: calc(20s * var(--blob-speed, 1));
 }
 .home-blob-2 {
   width: 50vw; height: 50vw;
   top: 25%; right: -12%;
   background: radial-gradient(circle, var(--blob-2) 0%, transparent 65%);
   animation: blob-drift-2 26s ease-in-out infinite;
+  animation-duration: calc(26s * var(--blob-speed, 1));
   animation-delay: -9s;
 }
 .home-blob-3 {
@@ -215,40 +276,65 @@
   bottom: -8%; left: 28%;
   background: radial-gradient(circle, var(--blob-3) 0%, transparent 65%);
   animation: blob-drift-3 18s ease-in-out infinite;
+  animation-duration: calc(18s * var(--blob-speed, 1));
   animation-delay: -14s;
 }
 
-/* ─── Background theme: aurora (green/teal/purple) ─────── */
-:root[data-bg-theme="aurora"] {
+/* ── Animation style overrides via any ancestor's data-bg-anim ── */
+[data-bg-anim="breathe"] .home-blob-1 { animation-name: blob-breathe-1; }
+[data-bg-anim="breathe"] .home-blob-2 { animation-name: blob-breathe-2; }
+[data-bg-anim="breathe"] .home-blob-3 { animation-name: blob-breathe-3; }
+
+[data-bg-anim="float"] .home-blob-1 { animation-name: blob-float-1; }
+[data-bg-anim="float"] .home-blob-2 { animation-name: blob-float-2; }
+[data-bg-anim="float"] .home-blob-3 { animation-name: blob-float-3; }
+
+[data-bg-anim="orbit"] .home-blob-1 { animation-name: blob-orbit-1; }
+[data-bg-anim="orbit"] .home-blob-2 { animation-name: blob-orbit-2; }
+[data-bg-anim="orbit"] .home-blob-3 { animation-name: blob-orbit-3; }
+
+/* ── Preview container: smaller blobs, lighter blur ── */
+[data-preview] .home-blob   { filter: blur(22px); }
+[data-preview] .home-blob-1 { width: 65%; height: 65%; }
+[data-preview] .home-blob-2 { width: 55%; height: 55%; }
+[data-preview] .home-blob-3 { width: 45%; height: 45%; }
+
+/* ─── Theme colors — work on any ancestor (live page + preview div) ── */
+
+/* aurora (green/teal/purple) */
+[data-bg-theme="aurora"] {
   --blob-1: oklch(0.70 0.14 165 / 0.10);
   --blob-2: oklch(0.60 0.12 290 / 0.07);
   --blob-3: oklch(0.65 0.10 145 / 0.07);
 }
-:root.light[data-bg-theme="aurora"] {
+:root.light[data-bg-theme="aurora"],
+.light [data-bg-theme="aurora"] {
   --blob-1: oklch(0.83 0.09 165 / 0.40);
   --blob-2: oklch(0.76 0.09 290 / 0.30);
   --blob-3: oklch(0.80 0.08 145 / 0.28);
 }
 
-/* ─── Background theme: ocean (blue/cyan/teal) ──────────── */
-:root[data-bg-theme="ocean"] {
+/* ocean (blue/cyan/teal) */
+[data-bg-theme="ocean"] {
   --blob-1: oklch(0.65 0.14 225 / 0.10);
   --blob-2: oklch(0.68 0.12 200 / 0.07);
   --blob-3: oklch(0.60 0.11 245 / 0.07);
 }
-:root.light[data-bg-theme="ocean"] {
+:root.light[data-bg-theme="ocean"],
+.light [data-bg-theme="ocean"] {
   --blob-1: oklch(0.82 0.09 225 / 0.40);
   --blob-2: oklch(0.84 0.08 200 / 0.34);
   --blob-3: oklch(0.78 0.08 245 / 0.28);
 }
 
-/* ─── Background theme: dusk (purple/pink/indigo) ───────── */
-:root[data-bg-theme="dusk"] {
+/* dusk (purple/pink/indigo) */
+[data-bg-theme="dusk"] {
   --blob-1: oklch(0.63 0.14 305 / 0.10);
   --blob-2: oklch(0.68 0.12 335 / 0.07);
   --blob-3: oklch(0.58 0.11 270 / 0.08);
 }
-:root.light[data-bg-theme="dusk"] {
+:root.light[data-bg-theme="dusk"],
+.light [data-bg-theme="dusk"] {
   --blob-1: oklch(0.80 0.09 305 / 0.38);
   --blob-2: oklch(0.82 0.08 335 / 0.32);
   --blob-3: oklch(0.77 0.08 270 / 0.28);

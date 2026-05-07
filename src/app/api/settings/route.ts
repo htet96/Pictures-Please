@@ -42,6 +42,8 @@ export async function PATCH(req: NextRequest) {
   if (body.watermarkSize !== undefined) data.watermarkSize = body.watermarkSize;
   if (body.linksPublic !== undefined) data.linksPublic = body.linksPublic;
   if (body.backgroundTheme !== undefined) data.backgroundTheme = body.backgroundTheme;
+  if (body.backgroundAnimation !== undefined) data.backgroundAnimation = body.backgroundAnimation;
+  if (body.backgroundSpeed !== undefined) data.backgroundSpeed = body.backgroundSpeed;
 
   const settings = await prisma.globalSettings.update({
     where: { id: "singleton" },
