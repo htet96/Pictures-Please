@@ -19,6 +19,8 @@ interface QueueItem {
   edited: Blob | null;
   editedFilename: string | null;
   status: ItemStatus;
+  photoId?: string;
+  photoStatus?: string;
 }
 
 type View = "dropzone" | "queue" | "editing";
@@ -82,7 +84,7 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
   }
 
   const uploadItem = useCallback(
-    async (item: QueueItem, name: string): Promise<boolean> => {
+    async (item: QueueItem, name: string): Promise<{ ok: boolean; photoId?: string; photoStatus?: string }> => {
       const blob = item.edited ?? item.file;
       const filename = item.editedFilename ?? item.file.name;
       const formData = new FormData();
@@ -93,7 +95,9 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
         method: "POST",
         body: formData,
       });
-      return res.ok;
+      if (!res.ok) return { ok: false };
+      const data = await res.json();
+      return { ok: true, photoId: data.photo?.id, photoStatus: data.photo?.status };
     },
     [galleryId]
   );
@@ -103,25 +107,37 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
     if (pending.length === 0) return;
 
     let successCount = 0;
+    const uploadedPhotos: Array<{ photoId: string; photoStatus: string }> = [];
 
     for (const item of pending) {
       setQueue((q) =>
         q.map((i) => (i.id === item.id ? { ...i, status: "uploading" } : i))
       );
-      const ok = await uploadItem(item, uploaderName);
+      const result = await uploadItem(item, uploaderName);
       setQueue((q) =>
         q.map((i) =>
-          i.id === item.id ? { ...i, status: ok ? "done" : "error" } : i
+          i.id === item.id
+            ? { ...i, status: result.ok ? "done" : "error", photoId: result.photoId, photoStatus: result.photoStatus }
+            : i
         )
       );
-      if (ok) successCount++;
-      else toast.error(`Failed to upload ${item.file.name}`);
+      if (result.ok) {
+        successCount++;
+        if (result.photoId) uploadedPhotos.push({ photoId: result.photoId, photoStatus: result.photoStatus ?? "APPROVED" });
+      } else {
+        toast.error(`Failed to upload ${item.file.name}`);
+      }
+    }
+
+    // Save PENDING photo IDs to localStorage so PendingUploadsBar can show them
+    if (uploadedPhotos.some((p) => p.photoStatus === "PENDING")) {
+      const storageKey = `pending_uploads_${galleryId}`;
+      const existing: string[] = JSON.parse(localStorage.getItem(storageKey) ?? "[]");
+      const newPending = uploadedPhotos.filter((p) => p.photoStatus === "PENDING").map((p) => p.photoId);
+      localStorage.setItem(storageKey, JSON.stringify([...existing, ...newPending]));
     }
 
     setUploadedCount((c) => c + successCount);
-    const allSucceeded = queue.every(
-      (i) => i.status === "done" || (i.status === "error" && !pending.find((p) => p.id === i.id))
-    );
     const updatedQueue = queue.map((i) => {
       const wasUploading = pending.find((p) => p.id === i.id);
       return wasUploading ? { ...i, status: ("done" as ItemStatus) } : i;

@@ -5,6 +5,18 @@ import { deletePhoto } from "@/lib/storage";
 
 type Params = { params: Promise<{ photoId: string }> };
 
+export async function GET(_req: NextRequest, { params }: Params) {
+  const { photoId } = await params;
+
+  const photo = await prisma.photo.findUnique({
+    where: { id: photoId },
+    select: { id: true, thumbnailPath: true, status: true },
+  });
+  if (!photo) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  return NextResponse.json({ photo });
+}
+
 export async function DELETE(_req: NextRequest, { params }: Params) {
   const { photoId } = await params;
   const session = await getSession();

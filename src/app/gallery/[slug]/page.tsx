@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { isAdmin, hasGalleryAccess } from "@/lib/auth";
 import { GalleryRenderer } from "@/components/gallery/GalleryRenderer";
+import { PendingUploadsBar } from "@/components/gallery/PendingUploadsBar";
 import { PasswordGate } from "@/components/shared/PasswordGate";
 import { QRCodeButton } from "@/components/qr/QRCodeButton";
 import { PageTransition } from "@/components/shared/PageTransition";
@@ -90,6 +91,13 @@ export default async function GalleryPage({ params }: Props) {
           </div>
         </div>
       </header>
+
+      {gallery.allowUserUpload && gallery.requireApproval && (
+        <PendingUploadsBar
+          galleryId={gallery.id}
+          approvedPhotoIds={gallery.photos.map((p) => p.id)}
+        />
+      )}
 
       <main className="flex-1">
         {gallery.photos.length === 0 ? (
