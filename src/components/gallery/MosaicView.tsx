@@ -148,7 +148,7 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
   // Fullscreen: 80px top + 80px bottom margin so grid is truly centered;
   // controls (≈60px) overlay within the bottom 80px.
   const cellHeight = fullscreen
-    ? "calc((100vh - 160px) / 4)"
+    ? "calc((100vh - 56px) / 4)"
     : "clamp(70px, calc(22vw - 8px), 220px)";
 
   const gridVisibleClass = ({
