@@ -1,0 +1,9 @@
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkEnabled" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkType" TEXT NOT NULL DEFAULT 'text';
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkText" TEXT NOT NULL DEFAULT 'PICTURES';
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkImagePath" TEXT;
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkOpacity" INTEGER NOT NULL DEFAULT 4;
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkX" INTEGER NOT NULL DEFAULT 5;
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkY" INTEGER NOT NULL DEFAULT 50;
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkRotation" INTEGER NOT NULL DEFAULT -90;
+ALTER TABLE "GlobalSettings" ADD COLUMN "watermarkSize" INTEGER NOT NULL DEFAULT 11;

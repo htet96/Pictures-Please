@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
 import { MasonryView } from "./MasonryView";
 import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
@@ -40,28 +41,34 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
 
   return (
     <>
-      <div className="flex justify-center gap-1 py-3 px-4 border-b bg-background/80 sticky top-[57px] z-20">
+      {/* Animated tab switcher */}
+      <div className="flex justify-center px-4 border-b border-border/60 bg-card/70 backdrop-blur-sm sticky top-[57px] z-20">
         {MODES.map((mode) => (
           <button
             key={mode.value}
             onClick={() => setActiveMode(mode.value)}
             className={cn(
-              "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
+              "relative px-5 py-3.5 text-sm font-medium transition-colors",
               activeMode === mode.value
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "text-primary"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
             {mode.label}
+            {activeMode === mode.value && (
+              <motion.div
+                layoutId="tab-indicator"
+                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                transition={{ type: "spring", stiffness: 500, damping: 40 }}
+              />
+            )}
           </button>
         ))}
       </div>
 
-      {/* MASONRY = Photos — delete enabled here only */}
       {activeMode === "MASONRY" && (
         <MasonryView photos={photos} onPhotoClick={handleOpen} canDelete={canDelete} />
       )}
-      {/* GRID = Mosaic — no delete */}
       {activeMode === "GRID" && (
         <MosaicView
           photos={photos}
@@ -71,7 +78,6 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
           transitionDuration={transitionDuration}
         />
       )}
-      {/* SLIDESHOW — no delete */}
       {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
         <SlideshowView
           photos={photos}

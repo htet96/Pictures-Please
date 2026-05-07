@@ -52,6 +52,26 @@ model GlobalSettings {
   slideshowTransition    String  @default("fade")
   transitionDuration     Int     @default(500)
   adminPasswordOnly      Boolean @default(false)
+  watermarkEnabled       Boolean @default(true)
+  watermarkType          String  @default("text")
+  watermarkText          String  @default("PICTURES")
+  watermarkImagePath     String?
+  watermarkOpacity       Int     @default(4)
+  watermarkX             Int     @default(5)
+  watermarkY             Int     @default(50)
+  watermarkRotation      Int     @default(-90)
+  watermarkSize          Int     @default(11)
+  linksPublic            Boolean @default(true)
+  backgroundTheme        String  @default("ember")
+  backgroundAnimation    String  @default("drift")
+  backgroundSpeed        Int     @default(3)
+}
+
+model OutgoingLink {
+  id    String @id @default(cuid())
+  label String
+  url   String
+  order Int    @default(0)
 }
 
 enum DisplayMode {

@@ -63,7 +63,7 @@ export async function POST(req: NextRequest, { params }: Params) {
     req.headers.get("x-real-ip") ??
     "unknown";
 
-  const autoApprove = !gallery.requireApproval || session.isAdmin;
+  const autoApprove = !gallery.requireApproval;
 
   const photo = await prisma.photo.create({
     data: {

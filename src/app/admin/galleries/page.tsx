@@ -59,7 +59,6 @@ export default async function GalleriesPage() {
               </CardHeader>
               <CardContent className="flex-1 flex flex-col gap-3">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">{gallery.displayMode}</Badge>
                   <Badge variant="outline">
                     {gallery._count.photos} photos
                   </Badge>

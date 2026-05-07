@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Rounded background in primary amber -->
+  <rect width="32" height="32" rx="7" fill="oklch(0.78 0.14 75)"/>
+  <!-- Camera body -->
+  <path
+    d="M5 12a2 2 0 0 1 2-2h2.172l2.121-2.121A1 1 0 0 1 12 7.5h8a1 1 0 0 1 .707.293L22.828 10H25a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V12z"
+    fill="white"
+  />
+  <!-- Lens -->
+  <circle cx="16" cy="17.5" r="3.8" fill="oklch(0.78 0.14 75)"/>
+  <circle cx="16" cy="17.5" r="2.2" fill="white" opacity="0.35"/>
+</svg>
