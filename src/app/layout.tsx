@@ -17,10 +17,15 @@ const bodyFont = Plus_Jakarta_Sans({
   weight: ["300", "400", "500", "600"],
 });
 
-export const metadata: Metadata = {
-  title: "Pictures Please",
-  description: "Self-hosted photo gallery",
-};
+export function generateMetadata(): Metadata {
+  return {
+    title: "Pictures Please",
+    description: "Htet's self-hosted photo gallery",
+    icons: {
+      icon: process.env.FAVICON_URL ?? "/icon.svg",
+    },
+  };
+}
 
 export const viewport: Viewport = {
   width: "device-width",
