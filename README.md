@@ -4,8 +4,8 @@ A self-hosted photo gallery web application built with Next.js, deployed via Doc
 
 ## Features
 
-- **Multiple display modes**: Masonry, Grid, Slideshow, Carousel (configurable per gallery)
-- **Photo upload** with client-side editing (crop, rotate, brightness/contrast, preset filters)
+- **Multiple display modes**: Masonry, Mosaic and Slideshow
+- **Photo upload** configurable per gallery
 - **QR code** generation for upload page links (dynamic — no hardcoded domains)
 - **Admin panel**: approve/reject photos, manage galleries, global settings
 - **Gallery passwords**: optional per-gallery password protection
@@ -13,15 +13,25 @@ A self-hosted photo gallery web application built with Next.js, deployed via Doc
 - **Mobile-friendly**: responsive design, touch swipe gestures, iOS Safari compatible
 - **Fully self-hosted**: PostgreSQL + local filesystem storage, no cloud dependencies
 
+### Admin Panel
+![alt text](image.png)
+
+### Landing Page
+![alt text](image-1.png)
+
+### Gallery
+![alt text](image-3.png)
+
 ## Quick Start
 
 ### 1. Configure environment
 
 ```bash
-cp .env.example .env.prod
+cp .env.example .env
+cp docker-compose.example.yml docker-compose.yml
 ```
 
-Edit `.env.prod`:
+Edit `.env`:
 
 ```env
 DB_PASSWORD=your_strong_db_password
@@ -34,7 +44,7 @@ APP_PORT=3000
 ### 2. Deploy with Docker Compose
 
 ```bash
-docker compose --env-file .env.prod up -d --build
+docker compose up -d --build
 ```
 
 The app will be available on the port you configured (default: 3000).
@@ -77,5 +87,8 @@ npm run dev
 ```bash
 docker compose --env-file .env.prod up -d --build
 ```
-
+or
+```bash
+docker compose restart
+```
 Prisma migrations run automatically on container startup.
