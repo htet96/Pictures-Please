@@ -9,6 +9,7 @@ import {
   Images,
   CheckSquare,
   Settings,
+  Layers2,
   LogOut,
   Menu,
   X,
@@ -21,6 +22,7 @@ const navItems = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { href: "/admin/galleries", label: "Galleries", icon: Images },
   { href: "/admin/moderation", label: "Moderation", icon: CheckSquare },
+  { href: "/admin/watermark", label: "Watermark", icon: Layers2 },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

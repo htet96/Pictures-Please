@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Images, Plus } from "lucide-react";
 import { GalleryGrid } from "@/components/home/GalleryGrid";
 import { HomeBackground } from "@/components/home/HomeBackground";
+import { WatermarkOverlay } from "@/components/home/WatermarkOverlay";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 export default async function Home() {
@@ -66,14 +67,10 @@ export default async function Home() {
       </header>
 
       <main className="flex-1 relative z-10 max-w-6xl mx-auto px-6 py-12 w-full">
-        {/* Grid-breaking decorative watermark */}
+        {/* Configurable watermark overlay */}
+        <WatermarkOverlay settings={settings} />
+
         <div className="relative mb-12">
-          <span
-            aria-hidden="true"
-            className="font-display pointer-events-none select-none absolute -left-6 top-1/2 -translate-y-1/2 -rotate-90 origin-center text-[11vw] leading-none font-bold text-foreground/[0.04] whitespace-nowrap"
-          >
-            PICTURES
-          </span>
           <div className="relative pl-0">
             <p className="text-xs font-semibold tracking-[0.2em] text-primary uppercase mb-3">
               — Collections

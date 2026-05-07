@@ -68,3 +68,20 @@ export async function serveFile(relativePath: string): Promise<Buffer | null> {
     return null;
   }
 }
+
+export function getWatermarkDir(): string {
+  return path.join(DATA_DIR, "watermark");
+}
+
+export async function saveWatermarkImage(ext: string, buffer: Buffer): Promise<string> {
+  const dir = getWatermarkDir();
+  await fs.mkdir(dir, { recursive: true });
+  const filename = `watermark.${ext}`;
+  await fs.writeFile(path.join(dir, filename), buffer);
+  return `watermark/${filename}`;
+}
+
+export async function deleteWatermarkImage(relativePath: string): Promise<void> {
+  const absPath = path.join(DATA_DIR, relativePath);
+  await fs.unlink(absPath).catch(() => {});
+}
