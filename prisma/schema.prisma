@@ -63,6 +63,13 @@ model GlobalSettings {
   watermarkSize          Int     @default(11)
 }
 
+model OutgoingLink {
+  id    String @id @default(cuid())
+  label String
+  url   String
+  order Int    @default(0)
+}
+
 enum DisplayMode {
   MASONRY
   GRID

@@ -8,11 +8,12 @@ import { Images, Plus } from "lucide-react";
 import { GalleryGrid } from "@/components/home/GalleryGrid";
 import { HomeBackground } from "@/components/home/HomeBackground";
 import { WatermarkOverlay } from "@/components/home/WatermarkOverlay";
+import { KebabMenu } from "@/components/home/KebabMenu";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 
 export default async function Home() {
   const admin = await isAdmin();
-  const [galleries, settings] = await Promise.all([
+  const [galleries, settings, outgoingLinks] = await Promise.all([
     prisma.gallery.findMany({
       where: { isPublic: true },
       orderBy: { createdAt: "desc" },
@@ -25,6 +26,7 @@ export default async function Home() {
       create: { id: "singleton" },
       update: {},
     }),
+    prisma.outgoingLink.findMany({ orderBy: { order: "asc" } }),
   ]);
 
   const canCreate = admin || settings.allowUserGalleries;
@@ -62,6 +64,7 @@ export default async function Home() {
                 </Button>
               </Link>
             )}
+            <KebabMenu links={outgoingLinks} />
           </div>
         </div>
       </header>
