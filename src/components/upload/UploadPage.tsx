@@ -223,13 +223,15 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
               )}
               {item.status === "pending" && (
                 <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={() => handleEditItem(item.id)}
-                    className="rounded bg-black/60 p-1 text-white hover:bg-black/80"
-                    title="Edit photo"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </button>
+                  {item.file.type !== "image/gif" && (
+                    <button
+                      onClick={() => handleEditItem(item.id)}
+                      className="rounded bg-black/60 p-1 text-white hover:bg-black/80"
+                      title="Edit photo"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </button>
+                  )}
                   <button
                     onClick={() => handleRemoveItem(item.id)}
                     className="rounded bg-black/60 p-1 text-white hover:bg-black/80"

@@ -31,6 +31,7 @@ interface GalleryData {
   allowUserDelete: boolean;
   allowUserUpload: boolean;
   isPublic: boolean;
+  allowWishes: boolean;
 }
 
 export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
@@ -45,6 +46,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
     allowUserDelete: gallery.allowUserDelete,
     allowUserUpload: gallery.allowUserUpload,
     isPublic: gallery.isPublic,
+    allowWishes: gallery.allowWishes,
   });
 
   async function handleSave() {
@@ -56,6 +58,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
       allowUserDelete: form.allowUserDelete,
       allowUserUpload: form.allowUserUpload,
       isPublic: form.isPublic,
+      allowWishes: form.allowWishes,
     };
 
     if (form.removePassword) body.password = null;
@@ -148,6 +151,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
           { key: "allowUserUpload", label: "Allow public uploads" },
           { key: "allowUserDelete", label: "Allow users to delete their photos" },
           { key: "isPublic", label: "Visible on public gallery list" },
+          { key: "allowWishes", label: "Enable Well Wishes guestbook" },
         ].map(({ key, label }) => (
           <div key={key} className="flex items-center justify-between">
             <Label htmlFor={key} className="font-normal">{label}</Label>

@@ -17,9 +17,11 @@ model Gallery {
   allowUserDelete Boolean     @default(false)
   allowUserUpload Boolean     @default(true)
   isPublic        Boolean     @default(true)
+  allowWishes     Boolean     @default(true)
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   photos          Photo[]
+  wishes          Wish[]
 }
 
 model Photo {
@@ -65,6 +67,19 @@ model GlobalSettings {
   backgroundTheme        String  @default("ember")
   backgroundAnimation    String  @default("drift")
   backgroundSpeed        Int     @default(3)
+}
+
+model Wish {
+  id         String   @id @default(cuid())
+  galleryId  String
+  gallery    Gallery  @relation(fields: [galleryId], references: [id], onDelete: Cascade)
+  guestToken String
+  guestName  String
+  message    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([galleryId])
 }
 
 model OutgoingLink {

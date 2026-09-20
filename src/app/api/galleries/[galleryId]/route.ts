@@ -16,6 +16,7 @@ const updateSchema = z.object({
   allowUserDelete: z.boolean().optional(),
   allowUserUpload: z.boolean().optional(),
   isPublic: z.boolean().optional(),
+  allowWishes: z.boolean().optional(),
 });
 
 export async function GET(_req: NextRequest, { params }: Params) {

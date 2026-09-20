@@ -6,12 +6,16 @@ import { GallerySettingsForm } from "@/components/admin/GallerySettingsForm";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { WishAdminSection } from "@/components/wishes/WishAdminSection";
 
 type Props = { params: Promise<{ galleryId: string }> };
 
 export default async function GallerySettingsPage({ params }: Props) {
   const { galleryId } = await params;
-  const gallery = await prisma.gallery.findUnique({ where: { id: galleryId } });
+  const gallery = await prisma.gallery.findUnique({
+    where: { id: galleryId },
+    include: { wishes: { orderBy: { createdAt: "asc" } } },
+  });
   if (!gallery) notFound();
 
   return (
@@ -35,7 +39,15 @@ export default async function GallerySettingsPage({ params }: Props) {
         allowUserDelete: gallery.allowUserDelete,
         allowUserUpload: gallery.allowUserUpload,
         isPublic: gallery.isPublic,
+        allowWishes: gallery.allowWishes,
       }} />
+
+      <div className="mt-10">
+        <WishAdminSection
+          galleryId={gallery.id}
+          wishes={gallery.wishes.map(({ guestToken: _, ...w }) => w)}
+        />
+      </div>
     </div>
   );
 }
