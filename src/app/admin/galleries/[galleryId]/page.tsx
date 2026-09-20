@@ -45,7 +45,11 @@ export default async function GallerySettingsPage({ params }: Props) {
       <div className="mt-10">
         <WishAdminSection
           galleryId={gallery.id}
-          wishes={gallery.wishes.map(({ guestToken: _, ...w }) => w)}
+          wishes={gallery.wishes.map(({ guestToken: _, ...w }) => ({
+            ...w,
+            createdAt: w.createdAt.toISOString(),
+            updatedAt: w.updatedAt.toISOString(),
+          }))}
         />
       </div>
     </div>
