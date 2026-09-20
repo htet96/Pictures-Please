@@ -88,7 +88,7 @@ export function WishesSection({ galleryId }: Props) {
           </div>
           <h2 className="text-xl font-display font-semibold tracking-wide">TEXTMAIL</h2>
           <p className="text-sm text-muted-foreground">
-            {myWish ? "Leave a message after the ☎️" : "Leave a wish for the couple"}
+            {myWish ? "Leave a message after the ☎️" : "Leave a message after the ☎️"}
           </p>
         </div>
 
