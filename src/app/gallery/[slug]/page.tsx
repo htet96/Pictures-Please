@@ -55,7 +55,7 @@ export default async function GalleryPage({ params }: Props) {
               Pictures Please
             </Link>
             <Link href="/" className="font-display text-lg font-semibold shrink-0 hover:text-primary transition-colors sm:hidden">
-              PP
+              📸
             </Link>
             <span className="text-border hidden sm:block">/</span>
             <div className="min-w-0">
