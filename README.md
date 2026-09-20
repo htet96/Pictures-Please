@@ -91,7 +91,7 @@ npm run dev
 ## Updating
 
 ```bash
-docker compose -d --build
+docker compose up -d --build
 ```
 If reloading .env file:
 ```bash
