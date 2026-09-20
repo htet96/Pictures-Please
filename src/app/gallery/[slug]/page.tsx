@@ -12,7 +12,6 @@ import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload } from "lucide-react";
-import { WishesSection } from "@/components/wishes/WishesSection";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -128,9 +127,6 @@ export default async function GalleryPage({ params }: Props) {
         )}
       </main>
 
-      {gallery.allowWishes && (
-        <WishesSection galleryId={gallery.id} />
-      )}
     </div>
   );
 }

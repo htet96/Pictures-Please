@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { UploadPage } from "@/components/upload/UploadPage";
+import { WishesSection } from "@/components/wishes/WishesSection";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
@@ -73,6 +74,11 @@ export default async function GalleryUploadPage({ params }: Props) {
             </p>
           </div>
           <UploadPage galleryId={gallery.id} requireApproval={gallery.requireApproval} />
+          {gallery.allowWishes && (
+            <div className="mt-10">
+              <WishesSection galleryId={gallery.id} />
+            </div>
+          )}
         </div>
       </main>
     </div>

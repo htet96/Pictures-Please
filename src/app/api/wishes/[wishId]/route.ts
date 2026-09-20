@@ -27,8 +27,8 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   if (wish.guestToken !== guestToken)
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  if (!guestName || typeof guestName !== "string" || guestName.trim().length < 1 || guestName.trim().length > 80)
-    return NextResponse.json({ error: "Name must be 1–80 characters" }, { status: 400 });
+  if (typeof guestName !== "string" || guestName.length > 80)
+    return NextResponse.json({ error: "Name too long" }, { status: 400 });
   if (!message || typeof message !== "string" || message.trim().length < 1 || message.trim().length > 1000)
     return NextResponse.json({ error: "Message must be 1–1000 characters" }, { status: 400 });
 

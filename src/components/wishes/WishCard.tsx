@@ -124,10 +124,6 @@ export function WishCard({ wish, guestToken, onUpdated, onDeleted }: Props) {
       ) : (
         <>
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <p className="font-medium text-sm">{wish.guestName}</p>
-              <p className="text-xs text-muted-foreground">{formatRelativeTime(wish.createdAt)}</p>
-            </div>
             <div className="flex items-center gap-1 shrink-0">
               <Button
                 size="icon"
@@ -166,6 +162,7 @@ export function WishCard({ wish, guestToken, onUpdated, onDeleted }: Props) {
             </div>
           </div>
           <p className="text-sm text-foreground whitespace-pre-wrap">{wish.message}</p>
+          <p className="text-xs text-muted-foreground mt-2">{formatRelativeTime(wish.createdAt)}</p>
         </>
       )}
     </div>
