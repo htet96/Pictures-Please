@@ -85,11 +85,10 @@ export function WishesSection({ galleryId }: Props) {
       <div className="mx-auto max-w-lg space-y-6">
         <div className="text-center space-y-1">
           <div className="flex items-center justify-center gap-2 text-primary">
-            <Heart className="h-5 w-5 fill-current" />
           </div>
-          <h2 className="text-xl font-display font-semibold tracking-wide">Well Wishes</h2>
+          <h2 className="text-xl font-display font-semibold tracking-wide">TEXTMAIL</h2>
           <p className="text-sm text-muted-foreground">
-            {myWish ? "Your wish for the couple" : "Leave a wish for the couple"}
+            {myWish ? "Leave a message after the ☎️" : "Leave a wish for the couple"}
           </p>
         </div>
 
