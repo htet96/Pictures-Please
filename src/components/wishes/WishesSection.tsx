@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { WishForm } from "./WishForm";
 import { WishCard } from "./WishCard";
 import { Heart } from "lucide-react";
@@ -88,7 +89,8 @@ export function WishesSection({ galleryId }: Props) {
           </div>
           <h2 className="text-xl font-display font-semibold tracking-wide">TEXTMAIL</h2>
           <p className="text-sm text-muted-foreground">
-            {myWish ? "Leave a message after the ☎️" : "Leave a message after the ☎️"}
+            {"Leave a message after the "}
+            <Image src="/phone-swing.gif" alt="phone" width={16} height={16} unoptimized className="inline-block h-[1em] w-auto align-middle" />
           </p>
         </div>
 
