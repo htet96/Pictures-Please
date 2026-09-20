@@ -72,7 +72,7 @@ export function WishAdminSection({ wishes: initialWishes }: Props) {
                   <p className="text-xs text-muted-foreground">{formatDate(wish.createdAt)}</p>
                 </div>
                 <AlertDialog>
-                  <AlertDialogTrigger asChild={false}>
+                  <AlertDialogTrigger>
                     <Button size="icon" variant="ghost" className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive">
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>

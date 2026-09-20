@@ -139,7 +139,7 @@ export function WishCard({ wish, guestToken, onUpdated, onDeleted }: Props) {
                 <Pencil className="h-3.5 w-3.5" />
               </Button>
               <AlertDialog>
-                <AlertDialogTrigger asChild={false}>
+                <AlertDialogTrigger>
                   <Button
                     size="icon"
                     variant="ghost"
