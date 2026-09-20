@@ -53,10 +53,9 @@ export function WishForm({ galleryId, guestToken, onSubmitted }: Props) {
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Well wishes, favourite memories with H/A, hopes for the couple etc here! And don’t forget to sign off! 🩵"
           maxLength={1000}
-          rows={10}
           disabled={submitting}
           required
-          className="resize-none"
+          className="resize-none min-h-48"
         />
         <p className="text-xs text-muted-foreground text-right">{message.length}/1000</p>
       </div>
