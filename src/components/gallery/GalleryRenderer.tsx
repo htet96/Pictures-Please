@@ -7,7 +7,7 @@ import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
 import { Lightbox } from "./Lightbox";
 import { cn } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { ArrowDownUp, Loader2 } from "lucide-react";
 
 interface Photo {
   id: string;
@@ -54,6 +54,9 @@ export function GalleryRenderer({
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadingAll, setLoadingAll] = useState(false);
 
+  // Sort state
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
   const hasMore = !allLoaded && photos.length < totalCount;
 
   // Fetch the next page (cursor-based, for infinite scroll in Photos mode)
@@ -63,7 +66,7 @@ export function GalleryRenderer({
     try {
       const lastId = photos[photos.length - 1]?.id;
       const res = await fetch(
-        `/api/galleries/${galleryId}/photos?cursor=${lastId}&limit=50`
+        `/api/galleries/${galleryId}/photos?cursor=${lastId}&limit=50&sort=${sortOrder}`
       );
       if (!res.ok) return;
       const data = await res.json();
@@ -72,7 +75,7 @@ export function GalleryRenderer({
     } finally {
       setLoadingMore(false);
     }
-  }, [galleryId, photos, loadingMore, allLoaded]);
+  }, [galleryId, photos, loadingMore, allLoaded, sortOrder]);
 
   // Fetch ALL photos at once (for Mosaic / Slideshow)
   const loadAll = useCallback(async () => {
@@ -80,7 +83,7 @@ export function GalleryRenderer({
     setLoadingAll(true);
     try {
       const res = await fetch(
-        `/api/galleries/${galleryId}/photos?all=true`
+        `/api/galleries/${galleryId}/photos?all=true&sort=${sortOrder}`
       );
       if (!res.ok) return;
       const data = await res.json();
@@ -89,13 +92,33 @@ export function GalleryRenderer({
     } finally {
       setLoadingAll(false);
     }
-  }, [galleryId, allLoaded, loadingAll]);
+  }, [galleryId, allLoaded, loadingAll, sortOrder]);
 
   // When switching to Mosaic or Slideshow, pre-load all photos
   function handleModeSwitch(mode: string) {
     setActiveMode(mode);
     if ((mode === "GRID" || mode === "SLIDESHOW" || mode === "CAROUSEL") && !allLoaded) {
       loadAll();
+    }
+  }
+
+  // Handle sort change: reset and re-fetch
+  async function handleSortChange() {
+    const newSort = sortOrder === "asc" ? "desc" : "asc";
+    setSortOrder(newSort);
+    setPhotos([]);
+    setAllLoaded(false);
+    setLoadingMore(true);
+    try {
+      const res = await fetch(
+        `/api/galleries/${galleryId}/photos?limit=50&sort=${newSort}`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      setPhotos(data.photos);
+      if (!data.nextCursor) setAllLoaded(true);
+    } finally {
+      setLoadingMore(false);
     }
   }
 
@@ -108,28 +131,39 @@ export function GalleryRenderer({
   return (
     <>
       {/* Animated tab switcher */}
-      <div className="flex justify-center px-4 border-b border-border/60 bg-card/70 backdrop-blur-sm sticky top-[57px] z-20">
-        {MODES.map((mode) => (
-          <button
-            key={mode.value}
-            onClick={() => handleModeSwitch(mode.value)}
-            className={cn(
-              "relative px-5 py-3.5 text-sm font-medium transition-colors",
-              activeMode === mode.value
-                ? "text-primary"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {mode.label}
-            {activeMode === mode.value && (
-              <motion.div
-                layoutId="tab-indicator"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
-                transition={{ type: "spring", stiffness: 500, damping: 40 }}
-              />
-            )}
-          </button>
-        ))}
+      <div className="flex items-center justify-center px-4 border-b border-border/60 bg-card/70 backdrop-blur-sm sticky top-[57px] z-20">
+        <div className="flex">
+          {MODES.map((mode) => (
+            <button
+              key={mode.value}
+              onClick={() => handleModeSwitch(mode.value)}
+              className={cn(
+                "relative px-5 py-3.5 text-sm font-medium transition-colors",
+                activeMode === mode.value
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {mode.label}
+              {activeMode === mode.value && (
+                <motion.div
+                  layoutId="tab-indicator"
+                  className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary"
+                  transition={{ type: "spring", stiffness: 500, damping: 40 }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Sort toggle */}
+        <button
+          onClick={handleSortChange}
+          className="absolute right-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded hover:bg-muted/50"
+        >
+          <ArrowDownUp className="h-3 w-3" />
+          <span className="hidden sm:inline">{sortOrder === "asc" ? "Oldest" : "Newest"}</span>
+        </button>
       </div>
 
       {showFullLoader ? (

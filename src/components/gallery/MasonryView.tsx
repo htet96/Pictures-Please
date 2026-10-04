@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import Masonry from "react-masonry-css";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Download, Loader2, Trash2, X } from "lucide-react";
+import { usePinch } from "@use-gesture/react";
+import { CheckCircle2, Circle, Download, Loader2, Minus, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,18 +28,73 @@ interface Props {
   onLoadMore?: () => void;
 }
 
-const breakpoints = {
-  default: 4,
-  1280: 3,
-  768: 2,
-  480: 1,
-};
+const ZOOM_KEY = "gallery-zoom-level";
+const MIN_ZOOM = 1;
+const MAX_ZOOM = 6;
+const DEFAULT_ZOOM = 4;
+
+function getBreakpoints(level: number): Record<string, number> {
+  switch (level) {
+    case 1: return { default: 1 };
+    case 2: return { default: 2, 480: 1 };
+    case 3: return { default: 3, 768: 2, 480: 1 };
+    case 4: return { default: 4, 1280: 3, 768: 2, 480: 1 };
+    case 5: return { default: 5, 1280: 4, 768: 3, 480: 2 };
+    case 6: return { default: 6, 1280: 5, 768: 4, 480: 2 };
+    default: return { default: 4, 1280: 3, 768: 2, 480: 1 };
+  }
+}
 
 export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingMore, onLoadMore }: Props) {
   const router = useRouter();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  // Zoom level state with localStorage persistence
+  const [zoomLevel, setZoomLevel] = useState(DEFAULT_ZOOM);
+  useEffect(() => {
+    const saved = localStorage.getItem(ZOOM_KEY);
+    if (saved) {
+      const n = parseInt(saved, 10);
+      if (n >= MIN_ZOOM && n <= MAX_ZOOM) setZoomLevel(n);
+    }
+  }, []);
+
+  const changeZoom = useCallback((delta: number) => {
+    setZoomLevel((prev) => {
+      const next = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, prev + delta));
+      localStorage.setItem(ZOOM_KEY, String(next));
+      return next;
+    });
+  }, []);
+
+  const breakpoints = useMemo(() => getBreakpoints(zoomLevel), [zoomLevel]);
+
+  // Pinch-to-zoom on the masonry container
+  const containerRef = useRef<HTMLDivElement>(null);
+  const lastPinchScale = useRef(1);
+
+  usePinch(
+    ({ offset: [scale], first }) => {
+      if (first) {
+        lastPinchScale.current = 1;
+        return;
+      }
+      const delta = scale - lastPinchScale.current;
+      if (Math.abs(delta) >= 0.3) {
+        // Pinch out (scale > 1) = zoom in = fewer columns = decrement
+        // Pinch in (scale < 1) = zoom out = more columns = increment
+        changeZoom(delta > 0 ? -1 : 1);
+        lastPinchScale.current = scale;
+      }
+    },
+    {
+      target: containerRef,
+      eventOptions: { passive: false },
+      scaleBounds: { min: 0.3, max: 3 },
+    }
+  );
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -117,7 +173,28 @@ export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingM
   return (
     <div className={cn("relative", selectMode && selected.size > 0 ? "pb-20" : "")}>
       {/* Toolbar */}
-      <div className="flex justify-end px-4 pt-3 pb-1">
+      <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        {/* Zoom controls */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => changeZoom(-1)}
+            disabled={zoomLevel <= MIN_ZOOM}
+            className="rounded p-1.5 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            aria-label="Zoom in (fewer columns)"
+          >
+            <Plus className="h-3.5 w-3.5" />
+          </button>
+          <button
+            onClick={() => changeZoom(1)}
+            disabled={zoomLevel >= MAX_ZOOM}
+            className="rounded p-1.5 text-muted-foreground hover:text-primary hover:bg-muted/50 transition-colors disabled:opacity-30 disabled:pointer-events-none"
+            aria-label="Zoom out (more columns)"
+          >
+            <Minus className="h-3.5 w-3.5" />
+          </button>
+        </div>
+
+        {/* Select toggle */}
         {!selectMode ? (
           <button
             onClick={() => setSelectMode(true)}
@@ -135,7 +212,7 @@ export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingM
         )}
       </div>
 
-      <div className="p-2 sm:p-4">
+      <div ref={containerRef} className="p-2 sm:p-4" style={{ touchAction: "pan-y" }}>
         <Masonry
           breakpointCols={breakpoints}
           className="flex gap-2 sm:gap-4"

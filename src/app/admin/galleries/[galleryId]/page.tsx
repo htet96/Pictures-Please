@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { GallerySettingsForm } from "@/components/admin/GallerySettingsForm";
+import { AdminPhotoGrid } from "@/components/admin/AdminPhotoGrid";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
@@ -41,6 +42,11 @@ export default async function GallerySettingsPage({ params }: Props) {
         isPublic: gallery.isPublic,
         allowWishes: gallery.allowWishes,
       }} />
+
+      <div className="mt-10">
+        <h2 className="text-lg font-semibold mb-4">Photos</h2>
+        <AdminPhotoGrid galleryId={gallery.id} />
+      </div>
 
       <div className="mt-10">
         <WishAdminSection

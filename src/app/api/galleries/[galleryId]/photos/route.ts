@@ -39,6 +39,7 @@ export async function GET(req: NextRequest, { params }: Params) {
 
   // Public path: only approved, supports cursor pagination
   const where = { galleryId, status: "APPROVED" as const };
+  const sort = searchParams.get("sort") === "desc" ? "desc" : "asc";
   const all = searchParams.get("all") === "true";
   const cursor = searchParams.get("cursor");
   const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10) || 50, 200);
@@ -46,7 +47,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   if (all) {
     const photos = await prisma.photo.findMany({
       where,
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: sort },
       select: PHOTO_SELECT_PUBLIC,
     });
     return NextResponse.json({ photos, nextCursor: null, totalCount: photos.length });
@@ -55,7 +56,7 @@ export async function GET(req: NextRequest, { params }: Params) {
   const [photos, totalCount] = await Promise.all([
     prisma.photo.findMany({
       where,
-      orderBy: { createdAt: "asc" },
+      orderBy: { createdAt: sort },
       select: PHOTO_SELECT_PUBLIC,
       take: limit,
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
