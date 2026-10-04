@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Trash2, Heart } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import type { WishData } from "./WishesSection";
 
 interface AdminWish extends WishData {
@@ -31,9 +31,10 @@ function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleString();
 }
 
-export function WishAdminSection({ wishes: initialWishes }: Props) {
+export function WishAdminSection({ galleryId, wishes: initialWishes }: Props) {
   const router = useRouter();
   const [wishes, setWishes] = useState<AdminWish[]>(initialWishes);
+  const [exporting, setExporting] = useState(false);
 
   async function handleDelete(wishId: string) {
     const res = await fetch(`/api/wishes/${wishId}`, {
@@ -50,13 +51,44 @@ export function WishAdminSection({ wishes: initialWishes }: Props) {
     }
   }
 
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const res = await fetch(`/api/galleries/${galleryId}/wishes/export`);
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "wishes.xlsx";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success("Wishes exported");
+    } catch {
+      toast.error("Failed to export wishes");
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Heart className="h-4 w-4 text-primary" />
-        <h2 className="text-lg font-semibold">Well Wishes</h2>
-        <span className="text-sm text-muted-foreground">({wishes.length})</span>
-      </div>
+      {wishes.length > 0 && (
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleExport}
+            disabled={exporting}
+            className="gap-1.5"
+          >
+            <Download className="h-3.5 w-3.5" />
+            {exporting ? "Exporting…" : "Export XLSX"}
+          </Button>
+        </div>
+      )}
 
       {wishes.length === 0 ? (
         <p className="text-sm text-muted-foreground py-4 text-center border rounded-lg">

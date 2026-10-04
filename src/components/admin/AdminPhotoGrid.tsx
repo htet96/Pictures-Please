@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Loader2, Trash2 } from "lucide-react";
+import { CheckCircle2, Circle, Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,7 @@ export function AdminPhotoGrid({ galleryId }: { galleryId: string }) {
   const [statusFilter, setStatusFilter] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   const fetchPhotos = useCallback(async (status: string) => {
     setLoading(true);
@@ -87,6 +88,32 @@ export function AdminPhotoGrid({ galleryId }: { galleryId: string }) {
     }
   }
 
+  async function handleDownloadZip() {
+    setDownloading(true);
+    try {
+      const res = await fetch("/api/photos/download-zip", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selected) }),
+      });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "photos.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`Downloading ${selected.size} photo${selected.size !== 1 ? "s" : ""}`);
+    } catch {
+      toast.error("Failed to download photos");
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   const statusColor = (s: string) => {
     switch (s) {
       case "APPROVED": return "bg-green-500";
@@ -128,6 +155,16 @@ export function AdminPhotoGrid({ galleryId }: { galleryId: string }) {
           {selected.size > 0 && (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleDownloadZip}
+                disabled={downloading}
+                className="gap-1.5"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {downloading ? "Zipping…" : "Download ZIP"}
+              </Button>
               <Button
                 size="sm"
                 variant="destructive"
