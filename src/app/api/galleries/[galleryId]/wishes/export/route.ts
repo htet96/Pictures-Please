@@ -25,14 +25,12 @@ export async function GET(_req: NextRequest, { params }: Params) {
     where: { galleryId },
     orderBy: { createdAt: "asc" },
     select: {
-      guestName: true,
       message: true,
       createdAt: true,
     },
   });
 
   const rows = wishes.map((w) => ({
-    Name: w.guestName,
     Message: w.message,
     Date: w.createdAt.toISOString().split("T")[0],
     Time: w.createdAt.toLocaleTimeString("en-US", { hour12: false }),
