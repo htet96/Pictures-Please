@@ -55,6 +55,15 @@ export async function saveThumbnail(
   await fs.writeFile(getThumbnailPath(galleryId, filename), buffer);
 }
 
+export async function deleteGalleryFiles(galleryId: string) {
+  const origDir = path.join(DATA_DIR, "originals", galleryId);
+  const thumbDir = path.join(DATA_DIR, "thumbnails", galleryId);
+  await Promise.allSettled([
+    fs.rm(origDir, { recursive: true, force: true }).catch(() => {}),
+    fs.rm(thumbDir, { recursive: true, force: true }).catch(() => {}),
+  ]);
+}
+
 export async function deletePhoto(originalPath: string, thumbnailPath: string) {
   const origAbs = path.join(DATA_DIR, originalPath);
   const thumbAbs = path.join(DATA_DIR, thumbnailPath);

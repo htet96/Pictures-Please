@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { MasonryView } from "./MasonryView";
 import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
+import { MyUploads } from "./MyUploads";
 import { Lightbox } from "./Lightbox";
 import { cn } from "@/lib/utils";
 import { ArrowDownUp, Loader2 } from "lucide-react";
@@ -24,12 +25,13 @@ interface Props {
   totalCount: number;
   displayMode: string;
   canDelete?: boolean;
+  allowUserUpload?: boolean;
   slideshowSpeed?: number;
   slideshowTransition?: string;
   transitionDuration?: number;
 }
 
-const MODES = [
+const BASE_MODES = [
   { value: "MASONRY", label: "Photos" },
   { value: "GRID", label: "Mosaic" },
   { value: "SLIDESHOW", label: "Slideshow" },
@@ -41,12 +43,20 @@ export function GalleryRenderer({
   totalCount,
   displayMode,
   canDelete,
+  allowUserUpload,
   slideshowSpeed,
   slideshowTransition,
   transitionDuration,
 }: Props) {
   const [activeMode, setActiveMode] = useState(displayMode);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const [hasMyUploads, setHasMyUploads] = useState(false);
+
+  // Check localStorage for user uploads
+  useEffect(() => {
+    const ids: string[] = JSON.parse(localStorage.getItem(`my_uploads_${galleryId}`) ?? "[]");
+    setHasMyUploads(ids.length > 0);
+  }, [galleryId]);
 
   // Pagination state
   const [photos, setPhotos] = useState(initialPhotos);
@@ -58,6 +68,11 @@ export function GalleryRenderer({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const hasMore = !allLoaded && photos.length < totalCount;
+
+  // Build mode list — include "My Uploads" if user has uploaded from this device
+  const modes = hasMyUploads
+    ? [...BASE_MODES, { value: "MY_UPLOADS", label: "My Uploads" }]
+    : BASE_MODES;
 
   // Fetch the next page (cursor-based, for infinite scroll in Photos mode)
   const loadNextPage = useCallback(async () => {
@@ -133,7 +148,7 @@ export function GalleryRenderer({
       {/* Animated tab switcher */}
       <div className="flex items-center justify-center px-4 border-b border-border/60 bg-card/70 backdrop-blur-sm sticky top-[57px] z-20">
         <div className="flex">
-          {MODES.map((mode) => (
+          {modes.map((mode) => (
             <button
               key={mode.value}
               onClick={() => handleModeSwitch(mode.value)}
@@ -156,14 +171,16 @@ export function GalleryRenderer({
           ))}
         </div>
 
-        {/* Sort toggle */}
-        <button
-          onClick={handleSortChange}
-          className="absolute right-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded hover:bg-muted/50"
-        >
-          <ArrowDownUp className="h-3 w-3" />
-          <span className="hidden sm:inline">{sortOrder === "asc" ? "Oldest" : "Newest"}</span>
-        </button>
+        {/* Sort toggle — hide on My Uploads tab */}
+        {activeMode !== "MY_UPLOADS" && (
+          <button
+            onClick={handleSortChange}
+            className="absolute right-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded hover:bg-muted/50"
+          >
+            <ArrowDownUp className="h-3 w-3" />
+            <span className="hidden sm:inline">{sortOrder === "asc" ? "Oldest" : "Newest"}</span>
+          </button>
+        )}
       </div>
 
       {showFullLoader ? (
@@ -197,6 +214,12 @@ export function GalleryRenderer({
               speed={slideshowSpeed}
               transition={slideshowTransition}
               transitionDuration={transitionDuration}
+            />
+          )}
+          {activeMode === "MY_UPLOADS" && (
+            <MyUploads
+              galleryId={galleryId}
+              canDelete={canDelete || allowUserUpload}
             />
           )}
         </>

@@ -170,6 +170,14 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
       localStorage.setItem(storageKey, JSON.stringify([...existing, ...newPending]));
     }
 
+    // Save ALL uploaded photo IDs for the "My Uploads" tab
+    if (uploadedPhotos.length > 0) {
+      const myKey = `my_uploads_${galleryId}`;
+      const existing: string[] = JSON.parse(localStorage.getItem(myKey) ?? "[]");
+      const newIds = uploadedPhotos.map((p) => p.photoId);
+      localStorage.setItem(myKey, JSON.stringify([...existing, ...newIds]));
+    }
+
     setUploadedCount((c) => c + successCount);
     const anyError = pending.some((p) => {
       const inQueue = queue.find((i) => i.id === p.id);

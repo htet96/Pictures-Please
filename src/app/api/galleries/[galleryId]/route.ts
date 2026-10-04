@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
+import { deleteGalleryFiles } from "@/lib/storage";
 import { z } from "zod";
 
 type Params = { params: Promise<{ galleryId: string }> };
@@ -65,6 +66,10 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { galleryId } = await params;
+
+  // Remove photo files from disk before cascade-deleting from DB
+  await deleteGalleryFiles(galleryId);
   await prisma.gallery.delete({ where: { id: galleryId } });
+
   return NextResponse.json({ ok: true });
 }

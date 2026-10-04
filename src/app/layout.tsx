@@ -40,6 +40,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${displayFont.variable} ${bodyFont.variable} h-full antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("pp-theme");if(t==="light")document.documentElement.classList.add("light")}catch(e){}})()`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <ThemeProvider>
           {children}

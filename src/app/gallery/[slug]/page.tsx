@@ -140,6 +140,7 @@ export default async function GalleryPage({ params }: Props) {
             totalCount={photoCount}
             displayMode={gallery.displayMode}
             canDelete={admin || gallery.allowUserDelete}
+            allowUserUpload={gallery.allowUserUpload}
             slideshowSpeed={settings.slideshowSpeed}
             slideshowTransition={settings.slideshowTransition}
             transitionDuration={settings.transitionDuration}
