@@ -41,7 +41,7 @@ model Photo {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 
-  @@index([galleryId, status])
+  @@index([galleryId, status, createdAt])
   @@index([status])
 }
 

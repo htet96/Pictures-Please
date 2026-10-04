@@ -4,7 +4,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,19 +39,18 @@ function formatRelativeTime(dateStr: string): string {
 
 export function WishCard({ wish, guestToken, onUpdated, onDeleted }: Props) {
   const [editing, setEditing] = useState(false);
-  const [editName, setEditName] = useState(wish.guestName);
   const [editMessage, setEditMessage] = useState(wish.message);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   async function handleSave() {
-    if (!editName.trim() || !editMessage.trim()) return;
+    if (!editMessage.trim()) return;
     setSaving(true);
     try {
       const res = await fetch(`/api/wishes/${wish.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guestToken, guestName: editName.trim(), message: editMessage.trim() }),
+        body: JSON.stringify({ guestToken, guestName: "", message: editMessage.trim() }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -68,7 +66,6 @@ export function WishCard({ wish, guestToken, onUpdated, onDeleted }: Props) {
   }
 
   function handleCancelEdit() {
-    setEditName(wish.guestName);
     setEditMessage(wish.message);
     setEditing(false);
   }
@@ -95,27 +92,19 @@ export function WishCard({ wish, guestToken, onUpdated, onDeleted }: Props) {
     <div className="rounded-lg border border-border/60 bg-card p-4 space-y-3">
       {editing ? (
         <div className="space-y-3">
-          <Input
-            value={editName}
-            onChange={(e) => setEditName(e.target.value)}
-            maxLength={80}
-            disabled={saving}
-            placeholder="Your name"
-          />
           <Textarea
             value={editMessage}
             onChange={(e) => setEditMessage(e.target.value)}
             maxLength={1000}
-            rows={4}
             disabled={saving}
-            className="resize-none"
+            className="resize-none min-h-48"
             placeholder="Your wish"
           />
           <div className="flex gap-2 justify-end">
             <Button size="sm" variant="ghost" onClick={handleCancelEdit} disabled={saving}>
               <X className="h-4 w-4 mr-1" /> Cancel
             </Button>
-            <Button size="sm" onClick={handleSave} disabled={saving || !editName.trim() || !editMessage.trim()}>
+            <Button size="sm" onClick={handleSave} disabled={saving || !editMessage.trim()}>
               {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
               Save
             </Button>

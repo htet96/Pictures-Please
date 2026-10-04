@@ -98,3 +98,40 @@ If reloading .env file:
 docker compose restart
 ```
 Prisma migrations run automatically on container startup.
+
+## Performance & Deployment Tuning
+
+### Environment variables
+
+| Variable | Default | Description |
+|---|---|---|
+| `UV_THREADPOOL_SIZE` | `4` | libuv thread pool size used by Sharp/libvips. Set to the number of vCPUs available to the container. |
+| `NODE_OPTIONS` | `--max-old-space-size=512` | Caps Node.js heap at 512 MB. Raise to `768` or `1024` if you have spare RAM and upload large files frequently. |
+| `UPLOAD_PROCESS_CONCURRENCY` | `2` | Max simultaneous Sharp image-processing jobs. Keep ≤ `UV_THREADPOOL_SIZE`. |
+| `DATABASE_POOL_SIZE` | `20` | Max pg connections per process. Keep below Postgres `max_connections`. |
+
+### Docker Desktop on Windows (WSL2)
+
+By default WSL2 uses half the host's RAM and all CPU cores. For a self-hosted gallery you may want to pin these in `%UserProfile%\.wslconfig`:
+
+```ini
+[wsl2]
+processors=4
+memory=4GB
+swap=2GB
+```
+
+After editing, run `wsl --shutdown` in PowerShell and restart Docker Desktop.
+
+### Cloudflare (dashboard settings — cannot be set in code)
+
+1. **Cache images at the edge** — *Rules → Cache Rules → Create rule*
+   - **Match**: URI Path `starts with` `/api/uploads/`
+   - **Cache**: "Cache Everything"
+   - **Edge TTL**: "Respect existing headers" (the app already sends `Cache-Control: immutable`)
+   - This serves thumbnails and originals directly from Cloudflare's CDN, offloading bandwidth from your home/VPS connection.
+
+2. **Avoid 524 timeout on large uploads** — *Rules → Configuration Rules* (or zone-level *Settings → Network → Proxy Read Timeout*)
+   - Set **Proxy Read Timeout** to **120 seconds** (default is 100 s, which can cause a Cloudflare 524 error mid-upload on slow connections).
+
+3. **Request body size** — Cloudflare's free/pro plan allows up to 100 MB per request, which is already well above the app's 20 MB file limit. No change needed.

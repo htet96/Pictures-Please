@@ -20,9 +20,11 @@ interface Props {
   initialIndex: number;
   onClose: () => void;
   canDelete?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
 }
 
-export function Lightbox({ photos, initialIndex, onClose, canDelete }: Props) {
+export function Lightbox({ photos, initialIndex, onClose, canDelete, hasMore, onLoadMore }: Props) {
   const router = useRouter();
   const [index, setIndex] = useState(initialIndex);
   const [loaded, setLoaded] = useState(false);
@@ -41,6 +43,13 @@ export function Lightbox({ photos, initialIndex, onClose, canDelete }: Props) {
     setZoomed(false);
     setIndex((i) => (i < photos.length - 1 ? i + 1 : 0));
   }, [photos.length]);
+
+  // Pre-fetch next batch when near the end of loaded photos
+  useEffect(() => {
+    if (hasMore && onLoadMore && index >= photos.length - 3) {
+      onLoadMore();
+    }
+  }, [index, photos.length, hasMore, onLoadMore]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

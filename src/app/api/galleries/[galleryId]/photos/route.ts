@@ -5,6 +5,18 @@ import { processUpload } from "@/lib/image";
 
 type Params = { params: Promise<{ galleryId: string }> };
 
+const PHOTO_SELECT_PUBLIC = {
+  id: true,
+  originalPath: true,
+  thumbnailPath: true,
+  filename: true,
+  mimeType: true,
+  width: true,
+  height: true,
+  status: true,
+  createdAt: true,
+} as const;
+
 export async function GET(req: NextRequest, { params }: Params) {
   const { galleryId } = await params;
   const session = await getSession();
@@ -14,19 +26,45 @@ export async function GET(req: NextRequest, { params }: Params) {
   const gallery = await prisma.gallery.findUnique({ where: { id: galleryId } });
   if (!gallery) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const where: Record<string, unknown> = { galleryId };
-  if (session.isAdmin && statusFilter) {
-    where.status = statusFilter;
-  } else if (!session.isAdmin) {
-    where.status = "APPROVED";
+  // Admin path: return all photos (full columns), no pagination
+  if (session.isAdmin) {
+    const where: Record<string, unknown> = { galleryId };
+    if (statusFilter) where.status = statusFilter;
+    const photos = await prisma.photo.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+    });
+    return NextResponse.json({ photos });
   }
 
-  const photos = await prisma.photo.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-  });
+  // Public path: only approved, supports cursor pagination
+  const where = { galleryId, status: "APPROVED" as const };
+  const all = searchParams.get("all") === "true";
+  const cursor = searchParams.get("cursor");
+  const limit = Math.min(parseInt(searchParams.get("limit") ?? "50", 10) || 50, 200);
 
-  return NextResponse.json({ photos });
+  if (all) {
+    const photos = await prisma.photo.findMany({
+      where,
+      orderBy: { createdAt: "asc" },
+      select: PHOTO_SELECT_PUBLIC,
+    });
+    return NextResponse.json({ photos, nextCursor: null, totalCount: photos.length });
+  }
+
+  const [photos, totalCount] = await Promise.all([
+    prisma.photo.findMany({
+      where,
+      orderBy: { createdAt: "asc" },
+      select: PHOTO_SELECT_PUBLIC,
+      take: limit,
+      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
+    }),
+    prisma.photo.count({ where }),
+  ]);
+
+  const nextCursor = photos.length === limit ? photos[photos.length - 1].id : null;
+  return NextResponse.json({ photos, nextCursor, totalCount });
 }
 
 export async function POST(req: NextRequest, { params }: Params) {

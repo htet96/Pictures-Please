@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Masonry from "react-masonry-css";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Download, Trash2, X } from "lucide-react";
+import { CheckCircle2, Circle, Download, Loader2, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +22,9 @@ interface Props {
   photos: Photo[];
   onPhotoClick: (index: number) => void;
   canDelete?: boolean;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 const breakpoints = {
@@ -31,7 +34,7 @@ const breakpoints = {
   480: 1,
 };
 
-export function MasonryView({ photos, onPhotoClick, canDelete }: Props) {
+export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingMore, onLoadMore }: Props) {
   const router = useRouter();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -94,6 +97,22 @@ export function MasonryView({ photos, onPhotoClick, canDelete }: Props) {
     if (res.ok) { toast.success("Photo deleted"); router.refresh(); }
     else toast.error("Failed to delete photo");
   }
+
+  // Infinite scroll sentinel
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!hasMore || !onLoadMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !loadingMore) onLoadMore();
+      },
+      { rootMargin: "400px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, onLoadMore]);
 
   return (
     <div className={cn("relative", selectMode && selected.size > 0 ? "pb-20" : "")}>
@@ -184,6 +203,13 @@ export function MasonryView({ photos, onPhotoClick, canDelete }: Props) {
             );
           })}
         </Masonry>
+
+        {/* Infinite scroll sentinel + spinner */}
+        {hasMore && (
+          <div ref={sentinelRef} className="flex justify-center py-8">
+            {loadingMore && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
+          </div>
+        )}
       </div>
 
       {/* Bulk action bar */}

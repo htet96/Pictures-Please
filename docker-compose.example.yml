@@ -14,12 +14,34 @@ services:
       - NODE_ENV=production
       - HOSTNAME=0.0.0.0
       - PORT=3000
+
+      # --- Performance tuning ---
+      # UV_THREADPOOL_SIZE: libuv thread pool used by Sharp/libvips and fs ops.
+      # Set to the number of vCPUs available to the container (default 4).
+      - UV_THREADPOOL_SIZE=${UV_THREADPOOL_SIZE:-4}
+
+      # NODE_OPTIONS: cap Node.js heap so the container doesn't OOM.
+      # 512 MB is enough for typical gallery workloads; raise if you have >4 GB RAM.
+      - NODE_OPTIONS=--max-old-space-size=512
+
+      # UPLOAD_PROCESS_CONCURRENCY: max simultaneous Sharp jobs in one process.
+      # Keep this <= UV_THREADPOOL_SIZE to avoid thread-pool starvation.
+      - UPLOAD_PROCESS_CONCURRENCY=${UPLOAD_PROCESS_CONCURRENCY:-2}
+
+      # DATABASE_POOL_SIZE: max pg connections per Node.js process.
+      # Should be < Postgres max_connections (set below). Default 20.
+      - DATABASE_POOL_SIZE=${DATABASE_POOL_SIZE:-20}
+
     volumes:
       - photo_data:/app/data/uploads
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
+    # Resource limits (docker compose v2 standalone syntax).
+    # Tune cpus to match your host; mem_limit prevents a runaway upload from OOMing the host.
+    cpus: "2"
+    mem_limit: 768m
 
   db:
     image: postgres:16-alpine
@@ -35,6 +57,16 @@ services:
       timeout: 5s
       retries: 10
     restart: unless-stopped
+    # Postgres tuning for a small single-host deployment.
+    # shared_buffers: ~25% of container RAM. effective_cache_size: ~50–75%.
+    # max_connections: keep well above DATABASE_POOL_SIZE but below OS socket limits.
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c effective_cache_size=256MB
+      -c max_connections=50
+      -c work_mem=4MB
+      -c maintenance_work_mem=64MB
 
 volumes:
   photo_data:

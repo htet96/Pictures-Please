@@ -3,6 +3,10 @@ import fs from "fs/promises";
 
 const DATA_DIR = path.join(process.cwd(), "data", "uploads");
 
+export function getDataDir(): string {
+  return DATA_DIR;
+}
+
 export function getOriginalPath(galleryId: string, filename: string): string {
   return path.join(DATA_DIR, "originals", galleryId, filename);
 }

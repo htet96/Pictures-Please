@@ -18,6 +18,8 @@ type Props = { params: Promise<{ slug: string }> };
 export default async function GalleryPage({ params }: Props) {
   const { slug } = await params;
 
+  const PAGE_SIZE = 50;
+
   const [gallery, settings] = await Promise.all([
     prisma.gallery.findUnique({
       where: { slug },
@@ -25,6 +27,18 @@ export default async function GalleryPage({ params }: Props) {
         photos: {
           where: { status: "APPROVED" },
           orderBy: { createdAt: "asc" },
+          take: PAGE_SIZE,
+          select: {
+            id: true,
+            originalPath: true,
+            thumbnailPath: true,
+            filename: true,
+            mimeType: true,
+            width: true,
+            height: true,
+            status: true,
+            createdAt: true,
+          },
         },
       },
     }),
@@ -36,6 +50,10 @@ export default async function GalleryPage({ params }: Props) {
   ]);
 
   if (!gallery) notFound();
+
+  const photoCount = await prisma.photo.count({
+    where: { galleryId: gallery.id, status: "APPROVED" },
+  });
 
   const admin = await isAdmin();
 
@@ -69,7 +87,7 @@ export default async function GalleryPage({ params }: Props) {
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs text-muted-foreground hidden sm:block tracking-wide">
-              {gallery.photos.length} photo{gallery.photos.length !== 1 ? "s" : ""}
+              {photoCount} photo{photoCount !== 1 ? "s" : ""}
             </span>
             <ThemeToggle />
             <QRCodeButton galleryId={gallery.id} />
@@ -100,7 +118,7 @@ export default async function GalleryPage({ params }: Props) {
       )}
 
       <main className="flex-1">
-        {gallery.photos.length === 0 ? (
+        {photoCount === 0 ? (
           <PageTransition>
             <div className="flex flex-col items-center justify-center py-32 text-muted-foreground text-center px-4">
               <p className="font-display text-3xl mb-2 text-foreground/50">No photos yet</p>
@@ -118,6 +136,8 @@ export default async function GalleryPage({ params }: Props) {
         ) : (
           <GalleryRenderer
             photos={gallery.photos}
+            galleryId={gallery.id}
+            totalCount={photoCount}
             displayMode={gallery.displayMode}
             canDelete={admin || gallery.allowUserDelete}
             slideshowSpeed={settings.slideshowSpeed}

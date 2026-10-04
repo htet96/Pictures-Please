@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { MasonryView } from "./MasonryView";
 import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
 import { Lightbox } from "./Lightbox";
 import { cn } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 
 interface Photo {
   id: string;
@@ -19,6 +20,8 @@ interface Photo {
 
 interface Props {
   photos: Photo[];
+  galleryId: string;
+  totalCount: number;
   displayMode: string;
   canDelete?: boolean;
   slideshowSpeed?: number;
@@ -32,12 +35,75 @@ const MODES = [
   { value: "SLIDESHOW", label: "Slideshow" },
 ];
 
-export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed, slideshowTransition, transitionDuration }: Props) {
+export function GalleryRenderer({
+  photos: initialPhotos,
+  galleryId,
+  totalCount,
+  displayMode,
+  canDelete,
+  slideshowSpeed,
+  slideshowTransition,
+  transitionDuration,
+}: Props) {
   const [activeMode, setActiveMode] = useState(displayMode);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
 
+  // Pagination state
+  const [photos, setPhotos] = useState(initialPhotos);
+  const [allLoaded, setAllLoaded] = useState(initialPhotos.length >= totalCount);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadingAll, setLoadingAll] = useState(false);
+
+  const hasMore = !allLoaded && photos.length < totalCount;
+
+  // Fetch the next page (cursor-based, for infinite scroll in Photos mode)
+  const loadNextPage = useCallback(async () => {
+    if (loadingMore || allLoaded) return;
+    setLoadingMore(true);
+    try {
+      const lastId = photos[photos.length - 1]?.id;
+      const res = await fetch(
+        `/api/galleries/${galleryId}/photos?cursor=${lastId}&limit=50`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      setPhotos((prev) => [...prev, ...data.photos]);
+      if (!data.nextCursor) setAllLoaded(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [galleryId, photos, loadingMore, allLoaded]);
+
+  // Fetch ALL photos at once (for Mosaic / Slideshow)
+  const loadAll = useCallback(async () => {
+    if (allLoaded || loadingAll) return;
+    setLoadingAll(true);
+    try {
+      const res = await fetch(
+        `/api/galleries/${galleryId}/photos?all=true`
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      setPhotos(data.photos);
+      setAllLoaded(true);
+    } finally {
+      setLoadingAll(false);
+    }
+  }, [galleryId, allLoaded, loadingAll]);
+
+  // When switching to Mosaic or Slideshow, pre-load all photos
+  function handleModeSwitch(mode: string) {
+    setActiveMode(mode);
+    if ((mode === "GRID" || mode === "SLIDESHOW" || mode === "CAROUSEL") && !allLoaded) {
+      loadAll();
+    }
+  }
+
   const handleOpen = (index: number) => setLightboxIndex(index);
   const handleClose = () => setLightboxIndex(null);
+
+  // Show a loading spinner while fetching all photos for Mosaic/Slideshow
+  const showFullLoader = (activeMode === "GRID" || activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && loadingAll;
 
   return (
     <>
@@ -46,7 +112,7 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
         {MODES.map((mode) => (
           <button
             key={mode.value}
-            onClick={() => setActiveMode(mode.value)}
+            onClick={() => handleModeSwitch(mode.value)}
             className={cn(
               "relative px-5 py-3.5 text-sm font-medium transition-colors",
               activeMode === mode.value
@@ -66,25 +132,40 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
         ))}
       </div>
 
-      {activeMode === "MASONRY" && (
-        <MasonryView photos={photos} onPhotoClick={handleOpen} canDelete={canDelete} />
-      )}
-      {activeMode === "GRID" && (
-        <MosaicView
-          photos={photos}
-          onPhotoClick={handleOpen}
-          speed={slideshowSpeed}
-          transition={slideshowTransition}
-          transitionDuration={transitionDuration}
-        />
-      )}
-      {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
-        <SlideshowView
-          photos={photos}
-          speed={slideshowSpeed}
-          transition={slideshowTransition}
-          transitionDuration={transitionDuration}
-        />
+      {showFullLoader ? (
+        <div className="flex items-center justify-center py-32">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <>
+          {activeMode === "MASONRY" && (
+            <MasonryView
+              photos={photos}
+              onPhotoClick={handleOpen}
+              canDelete={canDelete}
+              hasMore={hasMore}
+              loadingMore={loadingMore}
+              onLoadMore={loadNextPage}
+            />
+          )}
+          {activeMode === "GRID" && (
+            <MosaicView
+              photos={photos}
+              onPhotoClick={handleOpen}
+              speed={slideshowSpeed}
+              transition={slideshowTransition}
+              transitionDuration={transitionDuration}
+            />
+          )}
+          {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
+            <SlideshowView
+              photos={photos}
+              speed={slideshowSpeed}
+              transition={slideshowTransition}
+              transitionDuration={transitionDuration}
+            />
+          )}
+        </>
       )}
 
       {lightboxIndex !== null && (
@@ -93,6 +174,8 @@ export function GalleryRenderer({ photos, displayMode, canDelete, slideshowSpeed
           initialIndex={lightboxIndex}
           onClose={handleClose}
           canDelete={canDelete}
+          hasMore={hasMore}
+          onLoadMore={loadNextPage}
         />
       )}
     </>

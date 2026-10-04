@@ -83,21 +83,40 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
     });
   }
 
-  const uploadItem = useCallback(
-    async (item: QueueItem, name: string): Promise<{ ok: boolean; photoId?: string; photoStatus?: string }> => {
-      const blob = item.edited ?? item.file;
-      const filename = item.editedFilename ?? item.file.name;
-      const formData = new FormData();
-      formData.append("file", blob, filename);
-      if (name.trim()) formData.append("uploaderName", name.trim());
+  // Upload at most this many files simultaneously.
+  const UPLOAD_CONCURRENCY = 3;
 
-      const res = await fetch(`/api/galleries/${galleryId}/photos`, {
-        method: "POST",
-        body: formData,
-      });
-      if (!res.ok) return { ok: false };
-      const data = await res.json();
-      return { ok: true, photoId: data.photo?.id, photoStatus: data.photo?.status };
+  // Retry on 5xx, 524, or network errors with exponential backoff.
+  // 4xx errors are not retried (client mistake, won't self-heal).
+  const uploadItemWithRetry = useCallback(
+    async (item: QueueItem, name: string): Promise<{ ok: boolean; photoId?: string; photoStatus?: string }> => {
+      const MAX_RETRIES = 3;
+      for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const blob = item.edited ?? item.file;
+          const filename = item.editedFilename ?? item.file.name;
+          const formData = new FormData();
+          formData.append("file", blob, filename);
+          if (name.trim()) formData.append("uploaderName", name.trim());
+
+          const res = await fetch(`/api/galleries/${galleryId}/photos`, {
+            method: "POST",
+            body: formData,
+          });
+          if (res.ok) {
+            const data = await res.json();
+            return { ok: true, photoId: data.photo?.id, photoStatus: data.photo?.status };
+          }
+          if (res.status >= 400 && res.status < 500) return { ok: false };
+          // 5xx / 524 — fall through to retry
+        } catch {
+          // Network error — fall through to retry
+        }
+        if (attempt < MAX_RETRIES) {
+          await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+        }
+      }
+      return { ok: false };
     },
     [galleryId]
   );
@@ -109,25 +128,39 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
     let successCount = 0;
     const uploadedPhotos: Array<{ photoId: string; photoStatus: string }> = [];
 
-    for (const item of pending) {
-      setQueue((q) =>
-        q.map((i) => (i.id === item.id ? { ...i, status: "uploading" } : i))
-      );
-      const result = await uploadItem(item, uploaderName);
-      setQueue((q) =>
-        q.map((i) =>
-          i.id === item.id
-            ? { ...i, status: result.ok ? "done" : "error", photoId: result.photoId, photoStatus: result.photoStatus }
-            : i
-        )
-      );
-      if (result.ok) {
-        successCount++;
-        if (result.photoId) uploadedPhotos.push({ photoId: result.photoId, photoStatus: result.photoStatus ?? "APPROVED" });
-      } else {
-        toast.error(`Failed to upload ${item.file.name}`);
-      }
+    // Semaphore so at most UPLOAD_CONCURRENCY items are in-flight at once.
+    let active = 0;
+    const sem: Array<() => void> = [];
+    function acquire() {
+      if (active < UPLOAD_CONCURRENCY) { active++; return Promise.resolve(); }
+      return new Promise<void>((r) => sem.push(r));
     }
+    function release() { const next = sem.shift(); if (next) { next(); } else { active--; } }
+
+    await Promise.all(
+      pending.map(async (item) => {
+        await acquire();
+        setQueue((q) => q.map((i) => (i.id === item.id ? { ...i, status: "uploading" } : i)));
+        try {
+          const result = await uploadItemWithRetry(item, uploaderName);
+          setQueue((q) =>
+            q.map((i) =>
+              i.id === item.id
+                ? { ...i, status: result.ok ? "done" : "error", photoId: result.photoId, photoStatus: result.photoStatus }
+                : i
+            )
+          );
+          if (result.ok) {
+            successCount++;
+            if (result.photoId) uploadedPhotos.push({ photoId: result.photoId, photoStatus: result.photoStatus ?? "APPROVED" });
+          } else {
+            toast.error(`Failed to upload ${item.file.name}`);
+          }
+        } finally {
+          release();
+        }
+      })
+    );
 
     // Save PENDING photo IDs to localStorage so PendingUploadsBar can show them
     if (uploadedPhotos.some((p) => p.photoStatus === "PENDING")) {
@@ -138,12 +171,11 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
     }
 
     setUploadedCount((c) => c + successCount);
-    const updatedQueue = queue.map((i) => {
-      const wasUploading = pending.find((p) => p.id === i.id);
-      return wasUploading ? { ...i, status: ("done" as ItemStatus) } : i;
+    const anyError = pending.some((p) => {
+      const inQueue = queue.find((i) => i.id === p.id);
+      return inQueue?.status === "error";
     });
-    const anyError = updatedQueue.some((i) => i.status === "error");
-    if (!anyError) setAllDone(true);
+    if (!anyError && successCount > 0) setAllDone(true);
   }
 
   function handleReset() {
