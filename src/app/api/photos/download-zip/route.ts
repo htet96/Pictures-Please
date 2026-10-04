@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSession } from "@/lib/session";
 import { getDataDir } from "@/lib/storage";
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const archiver = require("archiver");
+const { ZipArchive } = require("archiver");
 import path from "path";
 import { PassThrough } from "stream";
 
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   }
 
   const dataDir = getDataDir();
-  const archive = archiver("zip", { zlib: { level: 1 } });
+  const archive = new ZipArchive({ zlib: { level: 1 } });
   const passthrough = new PassThrough();
 
   archive.pipe(passthrough);

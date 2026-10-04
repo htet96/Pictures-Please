@@ -30,9 +30,10 @@ export async function GET(req: NextRequest, { params }: Params) {
   if (session.isAdmin) {
     const where: Record<string, unknown> = { galleryId };
     if (statusFilter) where.status = statusFilter;
+    const adminSort = searchParams.get("sort") === "asc" ? "asc" : "desc";
     const photos = await prisma.photo.findMany({
       where,
-      orderBy: { createdAt: "desc" },
+      orderBy: { createdAt: adminSort },
     });
     return NextResponse.json({ photos });
   }
