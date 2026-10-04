@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { usePinch } from "@use-gesture/react";
-import { CheckCircle2, Circle, Download, Loader2, Minus, Plus, Trash2, X } from "lucide-react";
+import { ArrowDownUp, CheckCircle2, Circle, Download, Loader2, Minus, Plus, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,8 @@ interface Props {
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
+  sortOrder?: "asc" | "desc";
+  onSortChange?: () => void;
 }
 
 const ZOOM_KEY = "gallery-zoom-level";
@@ -45,7 +47,7 @@ function getBreakpoints(level: number): Record<string, number> {
   }
 }
 
-export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingMore, onLoadMore }: Props) {
+export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingMore, onLoadMore, sortOrder, onSortChange }: Props) {
   const router = useRouter();
   const [selectMode, setSelectMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -194,7 +196,17 @@ export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingM
           </button>
         </div>
 
-        {/* Select toggle */}
+        {/* Sort + Select */}
+        <div className="flex items-center gap-1">
+          {onSortChange && (
+            <button
+              onClick={onSortChange}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1 rounded hover:bg-muted/50"
+            >
+              <ArrowDownUp className="h-3 w-3" />
+              <span className="hidden sm:inline">{sortOrder === "asc" ? "Oldest" : "Newest"}</span>
+            </button>
+          )}
         {!selectMode ? (
           <button
             onClick={() => setSelectMode(true)}
@@ -210,6 +222,7 @@ export function MasonryView({ photos, onPhotoClick, canDelete, hasMore, loadingM
             <X className="h-3 w-3" /> Cancel
           </button>
         )}
+        </div>
       </div>
 
       <div ref={containerRef} className="p-2 sm:p-4" style={{ touchAction: "pan-y" }}>

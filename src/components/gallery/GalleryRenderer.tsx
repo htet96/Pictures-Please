@@ -8,7 +8,7 @@ import { SlideshowView } from "./SlideshowView";
 import { MyUploads } from "./MyUploads";
 import { Lightbox } from "./Lightbox";
 import { cn } from "@/lib/utils";
-import { ArrowDownUp, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 interface Photo {
   id: string;
@@ -25,6 +25,7 @@ interface Props {
   totalCount: number;
   displayMode: string;
   canDelete?: boolean;
+  allowUserDelete?: boolean;
   allowUserUpload?: boolean;
   slideshowSpeed?: number;
   slideshowTransition?: string;
@@ -43,6 +44,7 @@ export function GalleryRenderer({
   totalCount,
   displayMode,
   canDelete,
+  allowUserDelete,
   allowUserUpload,
   slideshowSpeed,
   slideshowTransition,
@@ -171,16 +173,6 @@ export function GalleryRenderer({
           ))}
         </div>
 
-        {/* Sort toggle — hide on My Uploads tab */}
-        {activeMode !== "MY_UPLOADS" && (
-          <button
-            onClick={handleSortChange}
-            className="absolute right-4 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors px-2 py-1.5 rounded hover:bg-muted/50"
-          >
-            <ArrowDownUp className="h-3 w-3" />
-            <span className="hidden sm:inline">{sortOrder === "asc" ? "Oldest" : "Newest"}</span>
-          </button>
-        )}
       </div>
 
       {showFullLoader ? (
@@ -197,6 +189,8 @@ export function GalleryRenderer({
               hasMore={hasMore}
               loadingMore={loadingMore}
               onLoadMore={loadNextPage}
+              sortOrder={sortOrder}
+              onSortChange={handleSortChange}
             />
           )}
           {activeMode === "GRID" && (
@@ -219,7 +213,7 @@ export function GalleryRenderer({
           {activeMode === "MY_UPLOADS" && (
             <MyUploads
               galleryId={galleryId}
-              canDelete={canDelete || allowUserUpload}
+              canDelete={canDelete || allowUserDelete || allowUserUpload}
             />
           )}
         </>
