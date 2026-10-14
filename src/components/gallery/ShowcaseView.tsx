@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize, Minus, Plus } from "lucide-react";
+import { Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize, Minus, Plus, ArrowLeftRight, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -66,6 +66,8 @@ const EFFECT_KEYFRAMES: Record<string, string> = {
 const MARQUEE_KEYFRAMES = `
   @keyframes sc-marquee-left  { from { transform: translateX(0) } to { transform: translateX(-50%) } }
   @keyframes sc-marquee-right { from { transform: translateX(-50%) } to { transform: translateX(0) } }
+  @keyframes sc-marquee-up    { from { transform: translateY(0) } to { transform: translateY(-50%) } }
+  @keyframes sc-marquee-down  { from { transform: translateY(-50%) } to { transform: translateY(0) } }
 `;
 
 const EFFECT_DURATION: Record<string, string> = {
@@ -80,8 +82,12 @@ const EFFECT_DURATION: Record<string, string> = {
   none: "0s",
 };
 
-const NUM_BG_ROWS = 8;
+const NUM_BG_STRIPS = 8;
 const MARQUEE_SPEED = "35s";
+// Repeat photos 6× per strip — ensures the strip is always long/tall enough to
+// fill the viewport even with very few photos. The loop is seamless because the
+// animation translates exactly -50%, and 6 = 3 pairs so both halves are identical.
+const REPEAT_FACTOR = 6;
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -92,12 +98,79 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-function getGridDims(n: number): { cols: number; rows: number } {
-  if (n <= 0) return { cols: 1, rows: 1 };
-  const cols = Math.ceil(Math.sqrt(n));
-  const rows = Math.ceil(n / cols);
-  return { cols, rows };
+// --- Justified layout -----------------------------------------------------------
+// Distributes photos across rows so aspect-ratio proportions are preserved and
+// the container is filled with minimal whitespace (Google Photos style).
+
+interface LayoutRect { x: number; y: number; w: number; h: number; }
+
+function computeJustifiedLayout(
+  photos: { width: number; height: number }[],
+  containerW: number,
+  containerH: number,
+  gap: number,
+): LayoutRect[] {
+  if (photos.length === 0 || containerW <= 0 || containerH <= 0) return [];
+
+  // Guard against zero dimensions
+  const aspects = photos.map(p => Math.max(0.1, p.width / Math.max(1, p.height)));
+  const totalAspect = aspects.reduce((a, b) => a + b, 0);
+
+  // Ideal number of rows: balances row heights to roughly match the container ratio
+  const nRows = Math.max(1, Math.round(Math.sqrt(totalAspect * containerH / containerW)));
+
+  // Greedy linear partition: target aspect-sum per row = totalAspect / nRows
+  const targetPerRow = totalAspect / nRows;
+  const rowGroups: number[][] = [];
+  let currentRow: number[] = [];
+  let currentSum = 0;
+
+  for (let i = 0; i < photos.length; i++) {
+    currentRow.push(i);
+    currentSum += aspects[i];
+
+    const remaining = photos.length - i - 1;
+    const rowsNeeded = nRows - rowGroups.length - 1;
+    if (rowsNeeded > 0 && remaining >= rowsNeeded) {
+      const withNext = i + 1 < photos.length ? currentSum + aspects[i + 1] : currentSum;
+      if (Math.abs(currentSum - targetPerRow) <= Math.abs(withNext - targetPerRow)) {
+        rowGroups.push(currentRow);
+        currentRow = [];
+        currentSum = 0;
+      }
+    }
+  }
+  if (currentRow.length > 0) rowGroups.push(currentRow);
+
+  // Raw row heights based on filling the full usable width
+  const usableW = containerW - gap * 2;
+  const rawHeights = rowGroups.map(indices => {
+    const rowAspectSum = indices.reduce((s, i) => s + aspects[i], 0);
+    const rowGaps = (indices.length - 1) * gap;
+    return (usableW - rowGaps) / rowAspectSum;
+  });
+
+  // Scale so rows fill the full usable height
+  const usableH = containerH - gap * 2;
+  const totalRawH = rawHeights.reduce((a, b) => a + b, 0) + (rowGroups.length - 1) * gap;
+  const scale = usableH / Math.max(1, totalRawH);
+
+  // Build absolute rects
+  const rects: LayoutRect[] = new Array(photos.length);
+  let y = gap;
+  for (let r = 0; r < rowGroups.length; r++) {
+    const h = rawHeights[r] * scale;
+    let x = gap;
+    for (const idx of rowGroups[r]) {
+      const w = h * aspects[idx];
+      rects[idx] = { x, y, w, h };
+      x += w + gap;
+    }
+    y += h + gap;
+  }
+  return rects;
 }
+// -------------------------------------------------------------------------------
 
 export function ShowcaseView({
   photos,
@@ -109,6 +182,7 @@ export function ShowcaseView({
   transitionDuration = 500,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const gridContainerRef = useRef<HTMLDivElement>(null);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [shuffledPhotos, setShuffledPhotos] = useState(() => shuffle(photos));
@@ -118,6 +192,8 @@ export function ShowcaseView({
   const [visible, setVisible] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [bgVertical, setBgVertical] = useState(false);
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
 
   const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / perPage));
   const fadeDuration = Math.round(transitionDuration / 2);
@@ -132,6 +208,18 @@ export function ShowcaseView({
   useEffect(() => {
     setPage(0);
   }, [perPage]);
+
+  // Measure the grid container so the justified layout can fill it exactly
+  useEffect(() => {
+    const el = gridContainerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(entries => {
+      const { width, height } = entries[0].contentRect;
+      setContainerSize({ w: width, h: height });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   const changePage = useCallback(
     (newPage: number, reshuffle = false) => {
@@ -193,13 +281,19 @@ export function ShowcaseView({
   }
 
   const pagePhotos = shuffledPhotos.slice(page * perPage, (page + 1) * perPage);
-  const { cols, rows } = getGridDims(pagePhotos.length);
 
   // Random animation delays per page
   const delays = useMemo(
     () => pagePhotos.map(() => Math.random() * 2),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [page, perPage]
+  );
+
+  // Justified layout — recomputes when photos or container size changes
+  const layout = useMemo(
+    () => computeJustifiedLayout(pagePhotos, containerSize.w, containerSize.h, 12),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [pagePhotos, containerSize.w, containerSize.h]
   );
 
   const gridVisibleClass = ({
@@ -214,14 +308,14 @@ export function ShowcaseView({
   const animName = effect !== "none" ? `sc-${effect}` : undefined;
   const animDuration = EFFECT_DURATION[effect] ?? "0s";
 
-  // Build background rows — split all photos evenly across NUM_BG_ROWS
-  const bgRows = useMemo(() => {
+  // Build background strips — split all photos evenly across NUM_BG_STRIPS
+  const bgStrips = useMemo(() => {
     if (background !== "scroll" || photos.length === 0) return [];
-    const rowSize = Math.max(1, Math.ceil(photos.length / NUM_BG_ROWS));
-    return Array.from({ length: NUM_BG_ROWS }, (_, i) => {
-      const slice = photos.slice(i * rowSize, (i + 1) * rowSize);
-      // Pad short rows by cycling through photos so each row has the same count
-      while (slice.length < rowSize && photos.length > 0) {
+    const stripSize = Math.max(1, Math.ceil(photos.length / NUM_BG_STRIPS));
+    return Array.from({ length: NUM_BG_STRIPS }, (_, i) => {
+      const slice = photos.slice(i * stripSize, (i + 1) * stripSize);
+      // Pad short strips by cycling through photos so each strip has the same count
+      while (slice.length < stripSize && photos.length > 0) {
         slice.push(photos[slice.length % photos.length]);
       }
       return slice;
@@ -297,6 +391,22 @@ export function ShowcaseView({
           <ChevronRight className="h-4 w-4" />
         </Button>
       )}
+
+      {/* Background direction toggle — only shown when scrolling background is active */}
+      {background === "scroll" && (
+        <>
+          <div className="w-px h-5 bg-border/50 hidden sm:block" />
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setBgVertical((v) => !v)}
+            title={bgVertical ? "Switch to horizontal background" : "Switch to vertical background"}
+          >
+            {bgVertical ? <ArrowLeftRight className="h-4 w-4" /> : <ArrowUpDown className="h-4 w-4" />}
+          </Button>
+        </>
+      )}
+
       <Button
         variant="outline"
         size="icon"
@@ -326,74 +436,114 @@ export function ShowcaseView({
       `}</style>
 
       {/* Scrolling background */}
-      {background === "scroll" && bgRows.length > 0 && (
-        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {bgRows.map((row, rowIdx) => {
-            const doubled = [...row, ...row];
-            const dir = rowIdx % 2 === 0 ? "sc-marquee-left" : "sc-marquee-right";
-            return (
-              <div
-                key={rowIdx}
-                className="flex"
-                style={{ height: `calc(100% / ${NUM_BG_ROWS})` }}
-              >
+      {background === "scroll" && bgStrips.length > 0 && (
+        <div
+          className={cn(
+            "absolute inset-0 overflow-hidden pointer-events-none z-0",
+            bgVertical ? "flex flex-row" : "flex flex-col"
+          )}
+        >
+          {bgStrips.map((strip, stripIdx) => {
+            // Repeat photos REPEAT_FACTOR times — fills the screen regardless of gallery size.
+            // REPEAT_FACTOR must be even so the -50% translate loop point is seamless.
+            const repeated = Array.from({ length: REPEAT_FACTOR }, () => strip).flat();
+
+            if (bgVertical) {
+              const dir = stripIdx % 2 === 0 ? "sc-marquee-up" : "sc-marquee-down";
+              return (
                 <div
-                  className="flex gap-1 shrink-0"
-                  style={{ animation: `${dir} ${MARQUEE_SPEED} linear infinite` }}
+                  key={stripIdx}
+                  className="flex flex-col overflow-hidden"
+                  style={{ width: `calc(100% / ${NUM_BG_STRIPS})` }}
                 >
-                  {doubled.map((photo, i) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      key={`${photo.id}-${i}`}
-                      src={`/api/uploads/${photo.thumbnailPath}`}
-                      alt=""
-                      className="h-full w-auto object-cover opacity-40 rounded"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ))}
+                  <div
+                    className="flex flex-col gap-1 shrink-0"
+                    style={{ animation: `${dir} ${MARQUEE_SPEED} linear infinite` }}
+                  >
+                    {repeated.map((photo, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={`${photo.id}-${i}`}
+                        src={`/api/uploads/${photo.thumbnailPath}`}
+                        alt=""
+                        className="w-full h-auto object-cover opacity-40 rounded"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
+              );
+            } else {
+              const dir = stripIdx % 2 === 0 ? "sc-marquee-left" : "sc-marquee-right";
+              return (
+                <div
+                  key={stripIdx}
+                  className="flex overflow-hidden"
+                  style={{ height: `calc(100% / ${NUM_BG_STRIPS})` }}
+                >
+                  <div
+                    className="flex gap-1 shrink-0"
+                    style={{ animation: `${dir} ${MARQUEE_SPEED} linear infinite` }}
+                  >
+                    {repeated.map((photo, i) => (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        key={`${photo.id}-${i}`}
+                        src={`/api/uploads/${photo.thumbnailPath}`}
+                        alt=""
+                        className="h-full w-auto object-cover opacity-40 rounded"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            }
           })}
           {/* Dark overlay */}
           <div className="absolute inset-0 bg-background/55" />
         </div>
       )}
 
-      {/* Main showcase grid */}
+      {/* Main showcase — justified layout with absolute positioning */}
       <div
-        className={cn("relative z-10 w-full grid gap-3 p-4 transition-all", gridVisibleClass)}
+        ref={gridContainerRef}
+        className={cn("relative z-10 w-full transition-all", gridVisibleClass)}
         style={{
           height: fullscreen ? "calc(100dvh - 56px)" : "calc(100dvh - 160px)",
-          gridTemplateColumns: `repeat(${cols}, 1fr)`,
-          gridTemplateRows: `repeat(${rows}, 1fr)`,
           transitionDuration: `${fadeDuration}ms`,
         }}
       >
-        {pagePhotos.map((photo, i) => (
-          <div
-            key={photo.id}
-            className="flex items-center justify-center overflow-hidden"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`/api/uploads/${photo.thumbnailPath}`}
-              alt={photo.filename}
-              loading="lazy"
-              decoding="async"
-              className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
-              style={
-                animName
-                  ? {
-                      animation: `${animName} ${animDuration} ease-in-out infinite`,
-                      animationDelay: `${delays[i]}s`,
-                    }
-                  : undefined
-              }
-            />
-          </div>
-        ))}
+        {layout.map((rect, i) => {
+          const photo = pagePhotos[i];
+          if (!photo || !rect) return null;
+          return (
+            <div
+              key={photo.id}
+              className="absolute overflow-hidden rounded-lg shadow-sm"
+              style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={`/api/uploads/${photo.thumbnailPath}`}
+                alt={photo.filename}
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover"
+                style={
+                  animName
+                    ? {
+                        animation: `${animName} ${animDuration} ease-in-out infinite`,
+                        animationDelay: `${delays[i]}s`,
+                      }
+                    : undefined
+                }
+              />
+            </div>
+          );
+        })}
       </div>
 
       {controls}
