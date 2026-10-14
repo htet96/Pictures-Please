@@ -202,7 +202,10 @@ export function ShowcaseView({
   const [perPage, setPerPage] = useState(defaultPerPage);
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
+  // nativeFullscreen = browser Fullscreen API; cssFullscreen = fixed-overlay fallback for iOS
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [cssFullscreen, setCssFullscreen] = useState(false);
+  const fullscreen = nativeFullscreen || cssFullscreen;
   const [showControls, setShowControls] = useState(true);
   const [bgVertical, setBgVertical] = useState(false);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
@@ -261,7 +264,7 @@ export function ShowcaseView({
   }, [playing, goNext, totalPages, speed]);
 
   useEffect(() => {
-    const onFsChange = () => setFullscreen(!!document.fullscreenElement);
+    const onFsChange = () => setNativeFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
@@ -277,7 +280,7 @@ export function ShowcaseView({
 
   useEffect(() => () => { if (hideTimerRef.current) clearTimeout(hideTimerRef.current); }, []);
 
-  function handleMouseMove() {
+  function revealControls() {
     if (!fullscreen) return;
     setShowControls(true);
     if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
@@ -285,10 +288,20 @@ export function ShowcaseView({
   }
 
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-    } else {
+    if (cssFullscreen) {
+      setCssFullscreen(false);
+      return;
+    }
+    if (nativeFullscreen) {
       document.exitFullscreen();
+      return;
+    }
+    // Try native fullscreen; fall back to CSS overlay for iOS Safari
+    const el = containerRef.current;
+    if (el?.requestFullscreen) {
+      el.requestFullscreen().catch(() => setCssFullscreen(true));
+    } else {
+      setCssFullscreen(true);
     }
   }
 
@@ -433,12 +446,14 @@ export function ShowcaseView({
   return (
     <div
       ref={containerRef}
-      onMouseMove={handleMouseMove}
+      onMouseMove={revealControls}
+      onTouchStart={revealControls}
       className={cn(
         "relative",
         fullscreen
           ? "bg-background flex flex-col h-screen"
-          : "pb-24"
+          : "pb-24",
+        cssFullscreen && "fixed inset-0 z-[9999]"
       )}
     >
       {/* Inject keyframes */}
