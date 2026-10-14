@@ -1,6 +1,6 @@
 !/usr/bin/env bash
 # Usage: ./redeploy.sh [/path/to/project]   (defaults to the current directory)
-# Runs: cd -> docker compose down -> git pull -> docker compose up -d
+# Runs: cd -> docker compose down -> git pull -> docker compose up -d --build
 # Stops at the first failure and prints the error log.
  
 PROJECT_DIR="${1:-$PWD}"
@@ -22,7 +22,7 @@ run() {
 run cd "$PROJECT_DIR"   # note: cd in a function still affects the script (no subshell)
 run docker compose down
 run git pull
-run docker compose up -d
+run docker compose up -d --build
  
 echo "All commands completed successfully."
 echo "Full log: $LOG_FILE"
