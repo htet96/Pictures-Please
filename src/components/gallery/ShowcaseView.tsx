@@ -142,29 +142,41 @@ function computeJustifiedLayout(
   }
   if (currentRow.length > 0) rowGroups.push(currentRow);
 
-  // Raw row heights based on filling the full usable width
+  // Natural row heights: each row fills usableW
   const usableW = containerW - gap * 2;
-  const rawHeights = rowGroups.map(indices => {
+  const naturalHeights = rowGroups.map(indices => {
     const rowAspectSum = indices.reduce((s, i) => s + aspects[i], 0);
     const rowGaps = (indices.length - 1) * gap;
     return (usableW - rowGaps) / rowAspectSum;
   });
 
-  // Scale so rows fill the full usable height
+  // Scale DOWN only to fit height — never scale up, which would push rows wider than the container
   const usableH = containerH - gap * 2;
-  const totalRawH = rawHeights.reduce((a, b) => a + b, 0) + (rowGroups.length - 1) * gap;
-  const scale = usableH / Math.max(1, totalRawH);
+  const totalNaturalH = naturalHeights.reduce((a, b) => a + b, 0) + (rowGroups.length - 1) * gap;
+  const scale = Math.min(1, usableH / Math.max(1, totalNaturalH));
+
+  // Vertically center the photo block when it doesn't fill the container
+  const scaledTotalH = totalNaturalH * scale;
+  const yOffset = gap + Math.max(0, (usableH - scaledTotalH) / 2);
 
   // Build absolute rects
   const rects: LayoutRect[] = new Array(photos.length);
-  let y = gap;
+  let y = yOffset;
   for (let r = 0; r < rowGroups.length; r++) {
-    const h = rawHeights[r] * scale;
-    let x = gap;
-    for (const idx of rowGroups[r]) {
-      const w = h * aspects[idx];
-      rects[idx] = { x, y, w, h };
-      x += w + gap;
+    const h = naturalHeights[r] * scale;
+    const indices = rowGroups[r];
+
+    // Widths preserve aspect ratios relative to scaled height
+    const rowWidths = indices.map(i => h * aspects[i]);
+    const totalRowW = rowWidths.reduce((a, b) => a + b, 0) + (indices.length - 1) * gap;
+
+    // Horizontally center each row — handles last row and cases with few photos
+    let x = gap + Math.max(0, (usableW - totalRowW) / 2);
+
+    for (let j = 0; j < indices.length; j++) {
+      const idx = indices[j];
+      rects[idx] = { x, y, w: rowWidths[j], h };
+      x += rowWidths[j] + gap;
     }
     y += h + gap;
   }
@@ -510,7 +522,7 @@ export function ShowcaseView({
       {/* Main showcase — justified layout with absolute positioning */}
       <div
         ref={gridContainerRef}
-        className={cn("relative z-10 w-full transition-all", gridVisibleClass)}
+        className={cn("relative z-10 w-full overflow-hidden transition-all", gridVisibleClass)}
         style={{
           height: fullscreen ? "calc(100dvh - 56px)" : "calc(100dvh - 160px)",
           transitionDuration: `${fadeDuration}ms`,
