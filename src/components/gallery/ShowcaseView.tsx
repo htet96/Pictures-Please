@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize } from "lucide-react";
+import { Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -18,12 +18,13 @@ interface Props {
   photos: Photo[];
   photosPerPage: number;
   effect: string;
+  background?: string;
   speed?: number;
   transition?: string;
   transitionDuration?: number;
 }
 
-// Animation keyframes injected once, each photo gets a random delay
+// Animation keyframes for photo effects
 const EFFECT_KEYFRAMES: Record<string, string> = {
   bounce: `@keyframes sc-bounce {
     0%, 100% { transform: translateY(0); }
@@ -62,6 +63,11 @@ const EFFECT_KEYFRAMES: Record<string, string> = {
   }`,
 };
 
+const MARQUEE_KEYFRAMES = `
+  @keyframes sc-marquee-left  { from { transform: translateX(0) } to { transform: translateX(-50%) } }
+  @keyframes sc-marquee-right { from { transform: translateX(-50%) } to { transform: translateX(0) } }
+`;
+
 const EFFECT_DURATION: Record<string, string> = {
   bounce: "2s",
   jiggle: "0.9s",
@@ -73,6 +79,9 @@ const EFFECT_DURATION: Record<string, string> = {
   breathe: "4s",
   none: "0s",
 };
+
+const NUM_BG_ROWS = 8;
+const MARQUEE_SPEED = "35s";
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -92,8 +101,9 @@ function getGridDims(n: number): { cols: number; rows: number } {
 
 export function ShowcaseView({
   photos,
-  photosPerPage,
+  photosPerPage: defaultPerPage,
   effect,
+  background = "scroll",
   speed = 4000,
   transition = "fade",
   transitionDuration = 500,
@@ -103,12 +113,13 @@ export function ShowcaseView({
 
   const [shuffledPhotos, setShuffledPhotos] = useState(() => shuffle(photos));
   const [page, setPage] = useState(0);
+  const [perPage, setPerPage] = useState(defaultPerPage);
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [showControls, setShowControls] = useState(true);
 
-  const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / photosPerPage));
+  const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / perPage));
   const fadeDuration = Math.round(transitionDuration / 2);
 
   useEffect(() => {
@@ -116,6 +127,11 @@ export function ShowcaseView({
     setPage(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [photos.length]);
+
+  // Reset to page 0 when perPage changes
+  useEffect(() => {
+    setPage(0);
+  }, [perPage]);
 
   const changePage = useCallback(
     (newPage: number, reshuffle = false) => {
@@ -176,14 +192,14 @@ export function ShowcaseView({
     }
   }
 
-  const pagePhotos = shuffledPhotos.slice(page * photosPerPage, (page + 1) * photosPerPage);
+  const pagePhotos = shuffledPhotos.slice(page * perPage, (page + 1) * perPage);
   const { cols, rows } = getGridDims(pagePhotos.length);
 
-  // Random animation delays per page (regenerated when page changes)
+  // Random animation delays per page
   const delays = useMemo(
     () => pagePhotos.map(() => Math.random() * 2),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [page, photosPerPage]
+    [page, perPage]
   );
 
   const gridVisibleClass = ({
@@ -198,10 +214,24 @@ export function ShowcaseView({
   const animName = effect !== "none" ? `sc-${effect}` : undefined;
   const animDuration = EFFECT_DURATION[effect] ?? "0s";
 
+  // Build background rows — split all photos evenly across NUM_BG_ROWS
+  const bgRows = useMemo(() => {
+    if (background !== "scroll" || photos.length === 0) return [];
+    const rowSize = Math.max(1, Math.ceil(photos.length / NUM_BG_ROWS));
+    return Array.from({ length: NUM_BG_ROWS }, (_, i) => {
+      const slice = photos.slice(i * rowSize, (i + 1) * rowSize);
+      // Pad short rows by cycling through photos so each row has the same count
+      while (slice.length < rowSize && photos.length > 0) {
+        slice.push(photos[slice.length % photos.length]);
+      }
+      return slice;
+    });
+  }, [photos, background]);
+
   const controls = (
     <div
       className={cn(
-        "flex items-center justify-center gap-3 py-3 px-4",
+        "flex items-center justify-center gap-2 py-3 px-4 flex-wrap",
         "bg-card/85 backdrop-blur-md border-t border-border/40",
         "transition-all duration-300",
         fullscreen
@@ -214,6 +244,33 @@ export function ShowcaseView({
           : "fixed bottom-0 left-0 right-0 z-30"
       )}
     >
+      {/* Photos per page controls */}
+      <div className="flex items-center gap-1">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setPerPage((p) => Math.max(1, p - 1))}
+          aria-label="Fewer photos per page"
+        >
+          <Minus className="h-3 w-3" />
+        </Button>
+        <span className="text-xs text-muted-foreground tabular-nums w-16 text-center">
+          {perPage} / page
+        </span>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={() => setPerPage((p) => Math.min(20, p + 1))}
+          aria-label="More photos per page"
+        >
+          <Plus className="h-3 w-3" />
+        </Button>
+      </div>
+
+      <div className="w-px h-5 bg-border/50 hidden sm:block" />
+
       {totalPages > 1 && (
         <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous page">
           <ChevronLeft className="h-4 w-4" />
@@ -256,20 +313,59 @@ export function ShowcaseView({
       ref={containerRef}
       onMouseMove={handleMouseMove}
       className={cn(
+        "relative",
         fullscreen
-          ? "bg-background flex flex-col h-screen relative"
+          ? "bg-background flex flex-col h-screen"
           : "pb-24"
       )}
     >
       {/* Inject keyframes */}
-      {effect !== "none" && EFFECT_KEYFRAMES[effect] && (
-        <style>{EFFECT_KEYFRAMES[effect]}</style>
+      <style>{`
+        ${effect !== "none" && EFFECT_KEYFRAMES[effect] ? EFFECT_KEYFRAMES[effect] : ""}
+        ${background === "scroll" ? MARQUEE_KEYFRAMES : ""}
+      `}</style>
+
+      {/* Scrolling background */}
+      {background === "scroll" && bgRows.length > 0 && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+          {bgRows.map((row, rowIdx) => {
+            const doubled = [...row, ...row];
+            const dir = rowIdx % 2 === 0 ? "sc-marquee-left" : "sc-marquee-right";
+            return (
+              <div
+                key={rowIdx}
+                className="flex"
+                style={{ height: `calc(100% / ${NUM_BG_ROWS})` }}
+              >
+                <div
+                  className="flex gap-1 shrink-0"
+                  style={{ animation: `${dir} ${MARQUEE_SPEED} linear infinite` }}
+                >
+                  {doubled.map((photo, i) => (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      key={`${photo.id}-${i}`}
+                      src={`/api/uploads/${photo.thumbnailPath}`}
+                      alt=""
+                      className="h-full w-auto object-cover opacity-40 rounded"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-background/55" />
+        </div>
       )}
 
+      {/* Main showcase grid */}
       <div
-        className={cn("w-full grid gap-3 p-4 transition-all", gridVisibleClass)}
+        className={cn("relative z-10 w-full grid gap-3 p-4 transition-all", gridVisibleClass)}
         style={{
-          height: fullscreen ? "calc(100vh - 56px)" : "calc(100vh - 160px)",
+          height: fullscreen ? "calc(100dvh - 56px)" : "calc(100dvh - 160px)",
           gridTemplateColumns: `repeat(${cols}, 1fr)`,
           gridTemplateRows: `repeat(${rows}, 1fr)`,
           transitionDuration: `${fadeDuration}ms`,

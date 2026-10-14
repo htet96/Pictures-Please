@@ -37,6 +37,7 @@ interface Props {
   showShowcase?: boolean;
   showcasePhotosPerPage?: number;
   showcaseEffect?: string;
+  showcaseBackground?: string;
 }
 
 export function GalleryRenderer({
@@ -56,6 +57,7 @@ export function GalleryRenderer({
   showShowcase = true,
   showcasePhotosPerPage = 6,
   showcaseEffect = "float",
+  showcaseBackground = "scroll",
 }: Props) {
   const ALL_MODES = [
     { value: "MASONRY",   label: "Photos",    visible: showPhotos },
@@ -234,6 +236,7 @@ export function GalleryRenderer({
               photos={photos}
               photosPerPage={showcasePhotosPerPage}
               effect={showcaseEffect}
+              background={showcaseBackground}
               speed={slideshowSpeed}
               transition={slideshowTransition}
               transitionDuration={transitionDuration}

@@ -45,6 +45,7 @@ interface GalleryData {
   showShowcase: boolean;
   showcasePhotosPerPage: number;
   showcaseEffect: string;
+  showcaseBackground: string;
 }
 
 const EFFECT_OPTIONS = [
@@ -78,6 +79,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
     showShowcase: gallery.showShowcase,
     showcasePhotosPerPage: gallery.showcasePhotosPerPage,
     showcaseEffect: gallery.showcaseEffect,
+    showcaseBackground: gallery.showcaseBackground,
   });
 
   function setTabVisibility(key: "showPhotos" | "showMosaic" | "showSlideshow" | "showShowcase", value: boolean) {
@@ -106,6 +108,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
       showShowcase: form.showShowcase,
       showcasePhotosPerPage: form.showcasePhotosPerPage,
       showcaseEffect: form.showcaseEffect,
+      showcaseBackground: form.showcaseBackground,
     };
 
     if (form.removePassword) body.password = null;
@@ -236,7 +239,8 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
           <h3 className="font-medium">Showcase Settings</h3>
 
           <div className="space-y-2">
-            <Label htmlFor="showcasePhotosPerPage">Photos per page</Label>
+            <Label htmlFor="showcasePhotosPerPage">Default photos per page</Label>
+            <p className="text-xs text-muted-foreground">Visitors can adjust this live in the gallery view.</p>
             <Input
               id="showcasePhotosPerPage"
               type="number"
@@ -264,6 +268,18 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <Label htmlFor="showcaseBackground" className="font-normal">Scrolling photo background</Label>
+              <p className="text-xs text-muted-foreground">All gallery photos scroll slowly in rows behind the showcase grid.</p>
+            </div>
+            <Switch
+              id="showcaseBackground"
+              checked={form.showcaseBackground === "scroll"}
+              onCheckedChange={(v) => setForm({ ...form, showcaseBackground: v ? "scroll" : "none" })}
+            />
           </div>
         </div>
       )}

@@ -24,6 +24,7 @@ const updateSchema = z.object({
   showShowcase: z.boolean().optional(),
   showcasePhotosPerPage: z.number().int().min(1).max(20).optional(),
   showcaseEffect: z.enum(["bounce", "jiggle", "pulse", "float", "spin", "wobble", "sway", "breathe", "none"]).optional(),
+  showcaseBackground: z.enum(["scroll", "none"]).optional(),
 });
 
 export async function GET(_req: NextRequest, { params }: Params) {

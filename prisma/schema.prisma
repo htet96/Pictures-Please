@@ -24,6 +24,7 @@ model Gallery {
   showShowcase          Boolean     @default(true)
   showcasePhotosPerPage Int         @default(6)
   showcaseEffect        String      @default("float")
+  showcaseBackground    String      @default("scroll")
   createdAt             DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   photos          Photo[]

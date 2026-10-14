@@ -51,6 +51,7 @@ export default async function GallerySettingsPage({ params }: Props) {
         showShowcase: gallery.showShowcase,
         showcasePhotosPerPage: gallery.showcasePhotosPerPage,
         showcaseEffect: gallery.showcaseEffect,
+        showcaseBackground: gallery.showcaseBackground,
       }} />
 
       <div className="mt-10">
