@@ -355,7 +355,7 @@ export function ShowcaseView({
         "transition-all duration-300",
         fullscreen
           ? cn(
-              "absolute bottom-0 left-0 right-0",
+              "absolute bottom-0 left-0 right-0 z-20",
               showControls
                 ? "opacity-100 translate-y-0"
                 : "opacity-0 translate-y-2 pointer-events-none"
