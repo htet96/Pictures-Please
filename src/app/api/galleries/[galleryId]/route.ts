@@ -10,7 +10,7 @@ const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   description: z.string().max(500).optional().nullable(),
   displayMode: z
-    .enum(["MASONRY", "GRID", "SLIDESHOW", "CAROUSEL"])
+    .enum(["MASONRY", "GRID", "SLIDESHOW", "CAROUSEL", "SHOWCASE"])
     .optional(),
   password: z.string().optional().nullable(),
   requireApproval: z.boolean().optional(),
@@ -18,6 +18,12 @@ const updateSchema = z.object({
   allowUserUpload: z.boolean().optional(),
   isPublic: z.boolean().optional(),
   allowWishes: z.boolean().optional(),
+  showPhotos: z.boolean().optional(),
+  showMosaic: z.boolean().optional(),
+  showSlideshow: z.boolean().optional(),
+  showShowcase: z.boolean().optional(),
+  showcasePhotosPerPage: z.number().int().min(1).max(20).optional(),
+  showcaseEffect: z.enum(["bounce", "jiggle", "pulse", "float", "spin", "wobble", "sway", "breathe", "none"]).optional(),
 });
 
 export async function GET(_req: NextRequest, { params }: Params) {

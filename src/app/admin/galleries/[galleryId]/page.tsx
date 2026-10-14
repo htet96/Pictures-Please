@@ -45,6 +45,12 @@ export default async function GallerySettingsPage({ params }: Props) {
         allowUserUpload: gallery.allowUserUpload,
         isPublic: gallery.isPublic,
         allowWishes: gallery.allowWishes,
+        showPhotos: gallery.showPhotos,
+        showMosaic: gallery.showMosaic,
+        showSlideshow: gallery.showSlideshow,
+        showShowcase: gallery.showShowcase,
+        showcasePhotosPerPage: gallery.showcasePhotosPerPage,
+        showcaseEffect: gallery.showcaseEffect,
       }} />
 
       <div className="mt-10">

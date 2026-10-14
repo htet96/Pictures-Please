@@ -17,8 +17,14 @@ model Gallery {
   allowUserDelete Boolean     @default(false)
   allowUserUpload Boolean     @default(true)
   isPublic        Boolean     @default(true)
-  allowWishes     Boolean     @default(true)
-  createdAt       DateTime    @default(now())
+  allowWishes           Boolean     @default(true)
+  showPhotos            Boolean     @default(true)
+  showMosaic            Boolean     @default(true)
+  showSlideshow         Boolean     @default(true)
+  showShowcase          Boolean     @default(true)
+  showcasePhotosPerPage Int         @default(6)
+  showcaseEffect        String      @default("float")
+  createdAt             DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   photos          Photo[]
   wishes          Wish[]
@@ -94,6 +100,7 @@ enum DisplayMode {
   GRID
   SLIDESHOW
   CAROUSEL
+  SHOWCASE
 }
 
 enum PhotoStatus {

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { MasonryView } from "./MasonryView";
 import { MosaicView } from "./MosaicView";
 import { SlideshowView } from "./SlideshowView";
+import { ShowcaseView } from "./ShowcaseView";
 import { MyUploads } from "./MyUploads";
 import { Lightbox } from "./Lightbox";
 import { cn } from "@/lib/utils";
@@ -30,13 +31,13 @@ interface Props {
   slideshowSpeed?: number;
   slideshowTransition?: string;
   transitionDuration?: number;
+  showPhotos?: boolean;
+  showMosaic?: boolean;
+  showSlideshow?: boolean;
+  showShowcase?: boolean;
+  showcasePhotosPerPage?: number;
+  showcaseEffect?: string;
 }
-
-const BASE_MODES = [
-  { value: "MASONRY", label: "Photos" },
-  { value: "GRID", label: "Mosaic" },
-  { value: "SLIDESHOW", label: "Slideshow" },
-];
 
 export function GalleryRenderer({
   photos: initialPhotos,
@@ -49,8 +50,26 @@ export function GalleryRenderer({
   slideshowSpeed,
   slideshowTransition,
   transitionDuration,
+  showPhotos = true,
+  showMosaic = true,
+  showSlideshow = true,
+  showShowcase = true,
+  showcasePhotosPerPage = 6,
+  showcaseEffect = "float",
 }: Props) {
-  const [activeMode, setActiveMode] = useState(displayMode);
+  const ALL_MODES = [
+    { value: "MASONRY",   label: "Photos",    visible: showPhotos },
+    { value: "GRID",      label: "Mosaic",    visible: showMosaic },
+    { value: "SLIDESHOW", label: "Slideshow", visible: showSlideshow },
+    { value: "SHOWCASE",  label: "Showcase",  visible: showShowcase },
+  ];
+  const BASE_MODES = ALL_MODES.filter((m) => m.visible);
+
+  const initialMode = BASE_MODES.some((m) => m.value === displayMode)
+    ? displayMode
+    : BASE_MODES[0]?.value ?? "MASONRY";
+
+  const [activeMode, setActiveMode] = useState(initialMode);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [hasMyUploads, setHasMyUploads] = useState(false);
 
@@ -94,7 +113,7 @@ export function GalleryRenderer({
     }
   }, [galleryId, photos, loadingMore, allLoaded, sortOrder]);
 
-  // Fetch ALL photos at once (for Mosaic / Slideshow)
+  // Fetch ALL photos at once (for Mosaic / Slideshow / Showcase)
   const loadAll = useCallback(async () => {
     if (allLoaded || loadingAll) return;
     setLoadingAll(true);
@@ -111,10 +130,10 @@ export function GalleryRenderer({
     }
   }, [galleryId, allLoaded, loadingAll, sortOrder]);
 
-  // When switching to Mosaic or Slideshow, pre-load all photos
+  // When switching to Mosaic, Slideshow, or Showcase, pre-load all photos
   function handleModeSwitch(mode: string) {
     setActiveMode(mode);
-    if ((mode === "GRID" || mode === "SLIDESHOW" || mode === "CAROUSEL") && !allLoaded) {
+    if ((mode === "GRID" || mode === "SLIDESHOW" || mode === "CAROUSEL" || mode === "SHOWCASE") && !allLoaded) {
       loadAll();
     }
   }
@@ -142,8 +161,8 @@ export function GalleryRenderer({
   const handleOpen = (index: number) => setLightboxIndex(index);
   const handleClose = () => setLightboxIndex(null);
 
-  // Show a loading spinner while fetching all photos for Mosaic/Slideshow
-  const showFullLoader = (activeMode === "GRID" || activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && loadingAll;
+  // Show a loading spinner while fetching all photos for Mosaic/Slideshow/Showcase
+  const showFullLoader = (activeMode === "GRID" || activeMode === "SLIDESHOW" || activeMode === "CAROUSEL" || activeMode === "SHOWCASE") && loadingAll;
 
   return (
     <>
@@ -205,6 +224,16 @@ export function GalleryRenderer({
           {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
             <SlideshowView
               photos={photos}
+              speed={slideshowSpeed}
+              transition={slideshowTransition}
+              transitionDuration={transitionDuration}
+            />
+          )}
+          {activeMode === "SHOWCASE" && (
+            <ShowcaseView
+              photos={photos}
+              photosPerPage={showcasePhotosPerPage}
+              effect={showcaseEffect}
               speed={slideshowSpeed}
               transition={slideshowTransition}
               transitionDuration={transitionDuration}

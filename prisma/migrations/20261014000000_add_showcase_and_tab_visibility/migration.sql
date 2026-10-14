@@ -1,0 +1,10 @@
+-- AlterEnum
+ALTER TYPE "DisplayMode" ADD VALUE 'SHOWCASE';
+
+-- AlterTable
+ALTER TABLE "Gallery" ADD COLUMN "showPhotos" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Gallery" ADD COLUMN "showMosaic" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Gallery" ADD COLUMN "showSlideshow" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Gallery" ADD COLUMN "showShowcase" BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE "Gallery" ADD COLUMN "showcasePhotosPerPage" INTEGER NOT NULL DEFAULT 6;
+ALTER TABLE "Gallery" ADD COLUMN "showcaseEffect" TEXT NOT NULL DEFAULT 'float';

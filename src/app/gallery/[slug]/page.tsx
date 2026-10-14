@@ -145,6 +145,12 @@ export default async function GalleryPage({ params }: Props) {
             slideshowSpeed={settings.slideshowSpeed}
             slideshowTransition={settings.slideshowTransition}
             transitionDuration={settings.transitionDuration}
+            showPhotos={gallery.showPhotos}
+            showMosaic={gallery.showMosaic}
+            showSlideshow={gallery.showSlideshow}
+            showShowcase={gallery.showShowcase}
+            showcasePhotosPerPage={gallery.showcasePhotosPerPage}
+            showcaseEffect={gallery.showcaseEffect}
           />
         )}
       </main>

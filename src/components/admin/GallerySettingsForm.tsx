@@ -9,6 +9,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -32,7 +39,25 @@ interface GalleryData {
   allowUserUpload: boolean;
   isPublic: boolean;
   allowWishes: boolean;
+  showPhotos: boolean;
+  showMosaic: boolean;
+  showSlideshow: boolean;
+  showShowcase: boolean;
+  showcasePhotosPerPage: number;
+  showcaseEffect: string;
 }
+
+const EFFECT_OPTIONS = [
+  { value: "float",   label: "Float — gentle vertical drift" },
+  { value: "bounce",  label: "Bounce — playful up/down bounce" },
+  { value: "jiggle",  label: "Jiggle — subtle rotation wiggle" },
+  { value: "pulse",   label: "Pulse — subtle scale in/out" },
+  { value: "sway",    label: "Sway — gentle side-to-side" },
+  { value: "wobble",  label: "Wobble — rotation + movement" },
+  { value: "breathe", label: "Breathe — very subtle scale" },
+  { value: "spin",    label: "Spin — slow full rotation" },
+  { value: "none",    label: "None — static" },
+];
 
 export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
   const router = useRouter();
@@ -47,7 +72,23 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
     allowUserUpload: gallery.allowUserUpload,
     isPublic: gallery.isPublic,
     allowWishes: gallery.allowWishes,
+    showPhotos: gallery.showPhotos,
+    showMosaic: gallery.showMosaic,
+    showSlideshow: gallery.showSlideshow,
+    showShowcase: gallery.showShowcase,
+    showcasePhotosPerPage: gallery.showcasePhotosPerPage,
+    showcaseEffect: gallery.showcaseEffect,
   });
+
+  function setTabVisibility(key: "showPhotos" | "showMosaic" | "showSlideshow" | "showShowcase", value: boolean) {
+    const next = { ...form, [key]: value };
+    const visibleCount = [next.showPhotos, next.showMosaic, next.showSlideshow, next.showShowcase].filter(Boolean).length;
+    if (visibleCount === 0) {
+      toast.error("At least one tab must remain visible");
+      return;
+    }
+    setForm(next);
+  }
 
   async function handleSave() {
     setLoading(true);
@@ -59,6 +100,12 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
       allowUserUpload: form.allowUserUpload,
       isPublic: form.isPublic,
       allowWishes: form.allowWishes,
+      showPhotos: form.showPhotos,
+      showMosaic: form.showMosaic,
+      showSlideshow: form.showSlideshow,
+      showShowcase: form.showShowcase,
+      showcasePhotosPerPage: form.showcasePhotosPerPage,
+      showcaseEffect: form.showcaseEffect,
     };
 
     if (form.removePassword) body.password = null;
@@ -163,6 +210,63 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
           </div>
         ))}
       </div>
+
+      <div className="space-y-4 rounded-lg border p-4">
+        <h3 className="font-medium">Tab Visibility</h3>
+        <p className="text-xs text-muted-foreground -mt-2">Choose which tabs are shown to visitors. At least one must remain visible.</p>
+        {[
+          { key: "showPhotos" as const,    label: "Photos (Masonry)" },
+          { key: "showMosaic" as const,    label: "Mosaic" },
+          { key: "showSlideshow" as const, label: "Slideshow" },
+          { key: "showShowcase" as const,  label: "Showcase" },
+        ].map(({ key, label }) => (
+          <div key={key} className="flex items-center justify-between">
+            <Label htmlFor={key} className="font-normal">{label}</Label>
+            <Switch
+              id={key}
+              checked={form[key]}
+              onCheckedChange={(v) => setTabVisibility(key, v)}
+            />
+          </div>
+        ))}
+      </div>
+
+      {form.showShowcase && (
+        <div className="space-y-4 rounded-lg border p-4">
+          <h3 className="font-medium">Showcase Settings</h3>
+
+          <div className="space-y-2">
+            <Label htmlFor="showcasePhotosPerPage">Photos per page</Label>
+            <Input
+              id="showcasePhotosPerPage"
+              type="number"
+              min={1}
+              max={20}
+              value={form.showcasePhotosPerPage}
+              onChange={(e) => {
+                const v = Math.max(1, Math.min(20, parseInt(e.target.value) || 1));
+                setForm({ ...form, showcasePhotosPerPage: v });
+              }}
+              className="w-24"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Animation Effect</Label>
+            <Select
+              value={form.showcaseEffect}
+              onValueChange={(v) => setForm({ ...form, showcaseEffect: v ?? form.showcaseEffect })}
+            >
+              <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {EFFECT_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-2">
         <AlertDialog>
