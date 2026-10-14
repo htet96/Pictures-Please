@@ -1,4 +1,4 @@
-!/usr/bin/env bash
+#!/usr/bin/env bash
 # Usage: ./redeploy.sh [/path/to/project]   (defaults to the current directory)
 # Runs: cd -> docker compose down -> git pull -> docker compose up -d --build
 # Stops at the first failure and prints the error log.
