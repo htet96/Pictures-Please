@@ -258,7 +258,12 @@ export function ShowcaseView({
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
 
   const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / perPage));
-  const fadeDuration = Math.round(transitionDuration / 2);
+  const fadeDuration = transitionDuration;
+
+  // Sync local overrides when props change (e.g. admin saves new gallery settings)
+  useEffect(() => setLocalTransition(transition), [transition]);
+  useEffect(() => setLocalSpeed(speed), [speed]);
+  useEffect(() => setLocalEffect(effect), [effect]);
 
   useEffect(() => {
     setShuffledPhotos(shuffle(photos));

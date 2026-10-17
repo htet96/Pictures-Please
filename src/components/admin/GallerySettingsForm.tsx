@@ -351,24 +351,22 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
         </div>
 
         <div className="space-y-2">
-          <Label>Transition Speed</Label>
-          <Select
-            value={String(form.transitionDuration)}
-            onValueChange={(v) => setForm({ ...form, transitionDuration: Number(v) })}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {[
-                { value: 200,  label: "Fast (200ms)" },
-                { value: 350,  label: "Moderate (350ms)" },
-                { value: 500,  label: "Normal (500ms)" },
-                { value: 700,  label: "Slow (700ms)" },
-                { value: 1000, label: "Very Slow (1s)" },
-              ].map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="transitionDuration">Transition Duration (seconds)</Label>
+          <Input
+            id="transitionDuration"
+            type="number"
+            step="0.1"
+            min="0.2"
+            max="5"
+            value={form.transitionDuration / 1000}
+            onChange={(e) => {
+              const seconds = parseFloat(e.target.value);
+              if (!isNaN(seconds)) {
+                setForm({ ...form, transitionDuration: Math.round(Math.min(5, Math.max(0.2, seconds)) * 1000) });
+              }
+            }}
+            className="w-24"
+          />
         </div>
       </div>
 

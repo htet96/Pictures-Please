@@ -32,12 +32,12 @@ export function UploadDropzone({ onFilesSelected, disabled }: Props) {
       "image/gif": [".gif"],
       "image/heic": [".heic"],
     },
-    maxSize: 20 * 1024 * 1024,
+    maxSize: 50 * 1024 * 1024,
     multiple: true,
     disabled,
     onDropRejected: (rejections) => {
       const err = rejections[0]?.errors[0];
-      if (err?.code === "file-too-large") setError("Each file must be under 20MB");
+      if (err?.code === "file-too-large") setError("Each file must be under 50MB");
       else if (err?.code === "file-invalid-type") setError("Only images are allowed");
       else setError("Invalid file");
     },
@@ -70,7 +70,7 @@ export function UploadDropzone({ onFilesSelected, disabled }: Props) {
           or tap to browse — select multiple photos at once
         </p>
         <p className="text-xs text-muted-foreground mt-2">
-          JPG, PNG, WebP, GIF, HEIC up to 20MB each
+          JPG, PNG, WebP, GIF, HEIC up to 50MB each
         </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}

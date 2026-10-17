@@ -108,11 +108,18 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
   const [page, setPage] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [fullscreen, setFullscreen] = useState(false);
+  // nativeFullscreen = browser Fullscreen API; cssFullscreen = fixed-overlay fallback for iOS
+  const [nativeFullscreen, setNativeFullscreen] = useState(false);
+  const [cssFullscreen, setCssFullscreen] = useState(false);
+  const fullscreen = nativeFullscreen || cssFullscreen;
   const [showControls, setShowControls] = useState(true);
 
   const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / PAGE_SIZE));
-  const fadeDuration = Math.round(transitionDuration / 2);
+  const fadeDuration = transitionDuration;
+
+  // Sync local overrides when props change (e.g. admin saves new gallery settings)
+  useEffect(() => setLocalTransition(transition), [transition]);
+  useEffect(() => setLocalSpeed(speed), [speed]);
 
   useEffect(() => {
     setShuffledPhotos(shuffle(photos));
@@ -145,7 +152,7 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
   }, [playing, goNext, totalPages, localSpeed]);
 
   useEffect(() => {
-    const onFsChange = () => setFullscreen(!!document.fullscreenElement);
+    const onFsChange = () => setNativeFullscreen(!!document.fullscreenElement);
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
@@ -170,10 +177,17 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
   }
 
   function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-    } else {
+    if (cssFullscreen) {
+      setCssFullscreen(false);
+    } else if (document.fullscreenElement) {
       document.exitFullscreen();
+    } else {
+      const el = containerRef.current;
+      if (el?.requestFullscreen) {
+        el.requestFullscreen().catch(() => setCssFullscreen(true));
+      } else {
+        setCssFullscreen(true);
+      }
     }
   }
 
@@ -279,10 +293,12 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
+      onTouchStart={handleMouseMove}
       className={cn(
         fullscreen
           ? "bg-background flex flex-col items-center justify-center h-screen relative px-4"
-          : "p-4 pb-24"
+          : "p-4 pb-24",
+        cssFullscreen && "fixed inset-0 z-[9999]"
       )}
     >
       <div
