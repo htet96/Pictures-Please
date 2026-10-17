@@ -542,6 +542,7 @@ export function ShowcaseView({
         className={cn("relative z-10 w-full overflow-hidden transition-all", gridVisibleClass)}
         style={{
           height: fullscreen ? "calc(100dvh - 56px)" : "calc(100dvh - 160px)",
+          marginTop: fullscreen ? "56px" : undefined,
           transitionDuration: `${fadeDuration}ms`,
         }}
       >
@@ -556,7 +557,7 @@ export function ShowcaseView({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`/api/uploads/${photo.thumbnailPath}`}
+                src={`/api/uploads/${photo.originalPath}`}
                 alt={photo.filename}
                 loading="lazy"
                 decoding="async"
