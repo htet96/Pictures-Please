@@ -184,6 +184,34 @@ function computeJustifiedLayout(
 }
 // -------------------------------------------------------------------------------
 
+function ProgressiveImg({ src, alt, animName, animDuration, animDelay }: {
+  src: string; alt: string; animName?: string; animDuration: string; animDelay: number;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onLoad={() => setLoaded(true)}
+      className={cn(
+        "absolute inset-0 w-full h-full object-cover transition-opacity duration-500",
+        loaded ? "opacity-100" : "opacity-0"
+      )}
+      style={
+        animName
+          ? {
+              animation: `${animName} ${animDuration} ease-in-out infinite`,
+              animationDelay: `${animDelay}s`,
+            }
+          : undefined
+      }
+    />
+  );
+}
+
 export function ShowcaseView({
   photos,
   photosPerPage: defaultPerPage,
@@ -555,9 +583,10 @@ export function ShowcaseView({
               className="absolute overflow-hidden rounded-lg shadow-sm"
               style={{ left: rect.x, top: rect.y, width: rect.w, height: rect.h }}
             >
+              {/* Thumbnail shown immediately */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={`/api/uploads/${photo.originalPath}`}
+                src={`/api/uploads/${photo.thumbnailPath}`}
                 alt={photo.filename}
                 loading="lazy"
                 decoding="async"
@@ -570,6 +599,14 @@ export function ShowcaseView({
                       }
                     : undefined
                 }
+              />
+              {/* Full-res loads on top; fades in once ready */}
+              <ProgressiveImg
+                src={`/api/uploads/${photo.originalPath}`}
+                alt={photo.filename}
+                animName={animName}
+                animDuration={animDuration}
+                animDelay={delays[i]}
               />
             </div>
           );
