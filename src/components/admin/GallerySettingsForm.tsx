@@ -49,6 +49,7 @@ interface GalleryData {
   slideshowSpeed: number;
   slideshowTransition: string;
   transitionDuration: number;
+  maxUploadBatch: number;
 }
 
 const TRANSITION_OPTIONS = [
@@ -100,6 +101,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
     slideshowSpeed: gallery.slideshowSpeed,
     slideshowTransition: gallery.slideshowTransition,
     transitionDuration: gallery.transitionDuration,
+    maxUploadBatch: gallery.maxUploadBatch,
   });
 
   function setTabVisibility(key: "showPhotos" | "showMosaic" | "showSlideshow" | "showShowcase", value: boolean) {
@@ -132,6 +134,7 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
       slideshowSpeed: form.slideshowSpeed,
       slideshowTransition: form.slideshowTransition,
       transitionDuration: form.transitionDuration,
+      maxUploadBatch: form.maxUploadBatch,
     };
 
     if (form.removePassword) body.password = null;
@@ -235,6 +238,26 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
             />
           </div>
         ))}
+      </div>
+
+      <div className="space-y-4 rounded-lg border p-4">
+        <h3 className="font-medium">Upload Settings</h3>
+        <div className="space-y-2">
+          <Label htmlFor="maxUploadBatch">Max photos per upload</Label>
+          <p className="text-xs text-muted-foreground">Maximum number of photos a user can select and upload at once.</p>
+          <Input
+            id="maxUploadBatch"
+            type="number"
+            min={1}
+            max={999}
+            value={form.maxUploadBatch}
+            onChange={(e) => {
+              const v = Math.max(1, Math.min(999, parseInt(e.target.value) || 1));
+              setForm({ ...form, maxUploadBatch: v });
+            }}
+            className="w-24"
+          />
+        </div>
       </div>
 
       <div className="space-y-4 rounded-lg border p-4">

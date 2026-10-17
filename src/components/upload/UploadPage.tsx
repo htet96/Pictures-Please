@@ -63,9 +63,10 @@ type View = "dropzone" | "queue" | "editing";
 interface Props {
   galleryId: string;
   requireApproval: boolean;
+  maxUploadBatch: number;
 }
 
-export function UploadPage({ galleryId, requireApproval }: Props) {
+export function UploadPage({ galleryId, requireApproval, maxUploadBatch }: Props) {
   const [view, setView] = useState<View>("dropzone");
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -74,6 +75,10 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
   const [uploadedCount, setUploadedCount] = useState(0);
 
   function handleFilesSelected(files: File[]) {
+    if (files.length > maxUploadBatch) {
+      toast.error(`You can only upload up to ${maxUploadBatch} photos at once`);
+      files = files.slice(0, maxUploadBatch);
+    }
     const items: QueueItem[] = files.map((file) => ({
       id: Math.random().toString(36).slice(2),
       file,
@@ -393,6 +398,7 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
     <UploadDropzone
       onFilesSelected={handleFilesSelected}
       disabled={false}
+      maxFiles={maxUploadBatch}
     />
   );
 }

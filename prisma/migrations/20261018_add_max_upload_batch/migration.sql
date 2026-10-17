@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Gallery" ADD COLUMN "maxUploadBatch" INTEGER NOT NULL DEFAULT 50;

@@ -73,7 +73,7 @@ export default async function GalleryUploadPage({ params }: Props) {
               {gallery.requireApproval && " (pending approval)"}
             </p>
           </div>
-          <UploadPage galleryId={gallery.id} requireApproval={gallery.requireApproval} />
+          <UploadPage galleryId={gallery.id} requireApproval={gallery.requireApproval} maxUploadBatch={gallery.maxUploadBatch} />
           {gallery.allowWishes && (
             <div className="mt-10">
               <WishesSection galleryId={gallery.id} />

@@ -28,6 +28,7 @@ const updateSchema = z.object({
   slideshowSpeed: z.number().int().min(1000).max(30000).optional(),
   slideshowTransition: z.string().max(20).optional(),
   transitionDuration: z.number().int().min(200).max(5000).optional(),
+  maxUploadBatch: z.number().int().min(1).max(999).optional(),
 });
 
 export async function GET(_req: NextRequest, { params }: Params) {

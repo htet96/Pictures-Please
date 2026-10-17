@@ -55,6 +55,7 @@ export default async function GallerySettingsPage({ params }: Props) {
         slideshowSpeed: gallery.slideshowSpeed,
         slideshowTransition: gallery.slideshowTransition,
         transitionDuration: gallery.transitionDuration,
+        maxUploadBatch: gallery.maxUploadBatch,
       }} />
 
       <div className="mt-10">

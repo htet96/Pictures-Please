@@ -8,9 +8,10 @@ import { cn } from "@/lib/utils";
 interface Props {
   onFilesSelected: (files: File[]) => void;
   disabled?: boolean;
+  maxFiles?: number;
 }
 
-export function UploadDropzone({ onFilesSelected, disabled }: Props) {
+export function UploadDropzone({ onFilesSelected, disabled, maxFiles }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   const onDrop = useCallback(
@@ -33,11 +34,13 @@ export function UploadDropzone({ onFilesSelected, disabled }: Props) {
       "image/heic": [".heic"],
     },
     maxSize: 50 * 1024 * 1024,
+    maxFiles,
     multiple: true,
     disabled,
     onDropRejected: (rejections) => {
       const err = rejections[0]?.errors[0];
-      if (err?.code === "file-too-large") setError("Each file must be under 50MB");
+      if (err?.code === "too-many-files") setError(`You can only upload up to ${maxFiles} photos at once`);
+      else if (err?.code === "file-too-large") setError("Each file must be under 50MB");
       else if (err?.code === "file-invalid-type") setError("Only images are allowed");
       else setError("Invalid file");
     },
@@ -67,7 +70,7 @@ export function UploadDropzone({ onFilesSelected, disabled }: Props) {
           {isDragActive ? "Drop your photos here" : "Drag & drop photos here"}
         </p>
         <p className="text-sm text-muted-foreground mt-1">
-          or tap to browse — select multiple photos at once
+          or tap to browse — up to {maxFiles ?? "unlimited"} photos at once
         </p>
         <p className="text-xs text-muted-foreground mt-2">
           JPG, PNG, WebP, GIF, HEIC up to 50MB each
