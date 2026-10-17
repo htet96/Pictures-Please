@@ -221,6 +221,7 @@ export function GalleryRenderer({
               speed={slideshowSpeed}
               transition={slideshowTransition}
               transitionDuration={transitionDuration}
+              isAdmin={canDelete}
             />
           )}
           {(activeMode === "SLIDESHOW" || activeMode === "CAROUSEL") && (
@@ -229,6 +230,7 @@ export function GalleryRenderer({
               speed={slideshowSpeed}
               transition={slideshowTransition}
               transitionDuration={transitionDuration}
+              isAdmin={canDelete}
             />
           )}
           {activeMode === "SHOWCASE" && (
@@ -240,6 +242,7 @@ export function GalleryRenderer({
               speed={slideshowSpeed}
               transition={slideshowTransition}
               transitionDuration={transitionDuration}
+              isAdmin={canDelete}
             />
           )}
           {activeMode === "MY_UPLOADS" && (

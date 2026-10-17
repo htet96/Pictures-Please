@@ -29,6 +29,7 @@ interface Props {
   speed?: number;
   transition?: string;
   transitionDuration?: number;
+  isAdmin?: boolean;
 }
 
 // Animation keyframes for photo effects
@@ -95,6 +96,24 @@ const MARQUEE_SPEED = "35s";
 // fill the viewport even with very few photos. The loop is seamless because the
 // animation translates exactly -50%, and 6 = 3 pairs so both halves are identical.
 const REPEAT_FACTOR = 6;
+
+const PAGE_TRANSITION_OPTIONS = [
+  { value: "fade",  label: "Fade" },
+  { value: "zoom",  label: "Zoom In" },
+  { value: "slide", label: "Slide" },
+  { value: "blur",  label: "Blur" },
+  { value: "drop",  label: "Drop" },
+  { value: "rise",  label: "Rise" },
+];
+
+const SPEED_OPTIONS = [
+  { value: 2000,  label: "2s" },
+  { value: 3000,  label: "3s" },
+  { value: 4000,  label: "4s" },
+  { value: 5000,  label: "5s" },
+  { value: 7000,  label: "7s" },
+  { value: 10000, label: "10s" },
+];
 
 const EFFECT_OPTIONS = [
   { value: "float",   label: "Float" },
@@ -211,6 +230,7 @@ export function ShowcaseView({
   speed = 4000,
   transition = "fade",
   transitionDuration = 500,
+  isAdmin,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -228,6 +248,8 @@ export function ShowcaseView({
   const [showControls, setShowControls] = useState(true);
   const [bgVertical, setBgVertical] = useState(false);
   const [localEffect, setLocalEffect] = useState(effect);
+  const [localTransition, setLocalTransition] = useState(transition);
+  const [localSpeed, setLocalSpeed] = useState(speed);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
 
   const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / perPage));
@@ -279,9 +301,9 @@ export function ShowcaseView({
 
   useEffect(() => {
     if (!playing || totalPages <= 1) return;
-    const t = setInterval(goNext, speed);
+    const t = setInterval(goNext, localSpeed);
     return () => clearInterval(t);
-  }, [playing, goNext, totalPages, speed]);
+  }, [playing, goNext, totalPages, localSpeed]);
 
   useEffect(() => {
     const onFsChange = () => setNativeFullscreen(!!document.fullscreenElement);
@@ -342,7 +364,7 @@ export function ShowcaseView({
   );
 
   // Map new slideshow-only transitions to page-level equivalents
-  const pageTransition = ({ kenburns: "fade", crossblur: "blur", iris: "fade", cube: "zoom", tiles: "fade" } as Record<string, string>)[transition] ?? transition;
+  const pageTransition = ({ kenburns: "fade", crossblur: "blur", iris: "fade", cube: "zoom", tiles: "fade" } as Record<string, string>)[localTransition] ?? localTransition;
   const gridVisibleClass = ({
     fade:  visible ? "opacity-100" : "opacity-0",
     zoom:  visible ? "opacity-100 scale-100" : "opacity-0 scale-95",
@@ -454,17 +476,41 @@ export function ShowcaseView({
         </>
       )}
 
-      <div className="w-px h-5 bg-border/50 hidden sm:block" />
-      <Select value={localEffect} onValueChange={(v) => setLocalEffect(v ?? localEffect)}>
-        <SelectTrigger className="h-8 w-[95px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {EFFECT_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {isAdmin && (
+        <>
+          <div className="w-px h-5 bg-border/50 hidden sm:block" />
+          <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
+            <SelectTrigger className="h-8 w-[100px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_TRANSITION_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
+            <SelectTrigger className="h-8 w-[65px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SPEED_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={localEffect} onValueChange={(v) => setLocalEffect(v ?? localEffect)}>
+            <SelectTrigger className="h-8 w-[95px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EFFECT_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </>
+      )}
 
       <Button
         variant="outline"

@@ -96,7 +96,19 @@ export async function POST(req: NextRequest, { params }: Params) {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
-  const processed = await processUpload(galleryId, buffer, file.type, file.name);
+
+  const settings = await prisma.globalSettings.upsert({
+    where: { id: "singleton" },
+    create: { id: "singleton" },
+    update: {},
+    select: { compressOriginals: true, maxOriginalWidth: true, originalQuality: true },
+  });
+
+  const processed = await processUpload(galleryId, buffer, file.type, file.name, {
+    compressOriginals: settings.compressOriginals,
+    maxOriginalWidth: settings.maxOriginalWidth,
+    originalQuality: settings.originalQuality,
+  });
 
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??

@@ -10,7 +10,42 @@ import { Label } from "@/components/ui/label";
 import { CheckCircle, Upload, Pencil, X, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type ItemStatus = "pending" | "uploading" | "done" | "error";
+type ItemStatus = "pending" | "compressing" | "uploading" | "done" | "error";
+
+/**
+ * Client-side image compression using Canvas API.
+ * Resizes images exceeding maxDimension and re-encodes as JPEG.
+ * Skips GIFs (animation) and already-small images.
+ */
+async function compressClientSide(
+  blob: Blob,
+  maxDimension = 2560,
+  quality = 0.85,
+): Promise<Blob> {
+  if (blob.type === "image/gif") return blob;
+
+  const bitmap = await createImageBitmap(blob);
+  const { width: w, height: h } = bitmap;
+
+  // Already within limits — return as-is
+  if (w <= maxDimension && h <= maxDimension) {
+    bitmap.close();
+    return blob;
+  }
+
+  const scale = Math.min(maxDimension / w, maxDimension / h);
+  const nw = Math.round(w * scale);
+  const nh = Math.round(h * scale);
+
+  const canvas = new OffscreenCanvas(nw, nh);
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(bitmap, 0, 0, nw, nh);
+  bitmap.close();
+
+  const compressed = await canvas.convertToBlob({ type: "image/jpeg", quality });
+  // Only use compressed if it's actually smaller
+  return compressed.size < blob.size ? compressed : blob;
+}
 
 interface QueueItem {
   id: string;
@@ -140,9 +175,23 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
     await Promise.all(
       pending.map(async (item) => {
         await acquire();
+        setQueue((q) => q.map((i) => (i.id === item.id ? { ...i, status: "compressing" } : i)));
+
+        // Client-side compression before upload
+        let compressedItem = item;
+        try {
+          const sourceBlob = item.edited ?? item.file;
+          const compressed = await compressClientSide(sourceBlob);
+          if (compressed !== sourceBlob) {
+            compressedItem = { ...item, edited: compressed, editedFilename: item.editedFilename ?? item.file.name };
+          }
+        } catch {
+          // Compression failed — upload original
+        }
+
         setQueue((q) => q.map((i) => (i.id === item.id ? { ...i, status: "uploading" } : i)));
         try {
-          const result = await uploadItemWithRetry(item, uploaderName);
+          const result = await uploadItemWithRetry(compressedItem, uploaderName);
           setQueue((q) =>
             q.map((i) =>
               i.id === item.id
@@ -233,7 +282,7 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
 
   // Queue screen
   if (view === "queue") {
-    const allUploading = queue.some((i) => i.status === "uploading");
+    const allUploading = queue.some((i) => i.status === "uploading" || i.status === "compressing");
     const pendingCount = queue.filter((i) => i.status === "pending").length;
 
     return (
@@ -246,6 +295,12 @@ export function UploadPage({ galleryId, requireApproval }: Props) {
                 alt={item.file.name}
                 className="w-full h-full object-cover"
               />
+              {item.status === "compressing" && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center flex-col gap-1">
+                  <Loader2 className="h-6 w-6 text-white animate-spin" />
+                  <span className="text-white text-xs">Compressing…</span>
+                </div>
+              )}
               {item.status === "uploading" && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                   <Loader2 className="h-6 w-6 text-white animate-spin" />

@@ -38,6 +38,12 @@ function releaseSemaphore(): void {
   }
 }
 
+export interface CompressionSettings {
+  compressOriginals: boolean;
+  maxOriginalWidth: number;
+  originalQuality: number;
+}
+
 export interface ProcessedImage {
   filename: string;
   originalPath: string;
@@ -52,11 +58,12 @@ export async function processUpload(
   galleryId: string,
   buffer: Buffer,
   originalMimeType: string,
-  originalFilename: string
+  originalFilename: string,
+  compression?: CompressionSettings,
 ): Promise<ProcessedImage> {
   await acquireSemaphore();
   try {
-    return await _process(galleryId, buffer, originalMimeType, originalFilename);
+    return await _process(galleryId, buffer, originalMimeType, originalFilename, compression);
   } finally {
     releaseSemaphore();
   }
@@ -66,7 +73,8 @@ async function _process(
   galleryId: string,
   buffer: Buffer,
   originalMimeType: string,
-  originalFilename: string
+  originalFilename: string,
+  compression?: CompressionSettings,
 ): Promise<ProcessedImage> {
   // GIFs: preserve animation — skip EXIF rotation (GIFs have none), store original as-is,
   // generate animated WebP thumbnail.
@@ -104,7 +112,6 @@ async function _process(
   // full decode followed by resize, and avoids the intermediate rotatedBuffer.
 
   const ext = originalFilename.split(".").pop()?.toLowerCase() ?? "jpg";
-  const filename = `${createId()}.${ext}`;
   const thumbnailFilename = `${createId()}.webp`;
 
   // Read metadata (header-only, no pixel decode) to get display dimensions.
@@ -113,14 +120,53 @@ async function _process(
   const rawW = metadata.width ?? 0;
   const rawH = metadata.height ?? 0;
   // EXIF orientations 5–8 are 90°/270° rotations — swap w/h for display dimensions.
-  const [width, height] = orientation >= 5 ? [rawH, rawW] : [rawW, rawH];
+  let [width, height] = orientation >= 5 ? [rawH, rawW] : [rawW, rawH];
 
-  // Save the original bytes without modification.
-  await saveOriginal(galleryId, filename, buffer);
+  // Compress/resize oversized originals if configured
+  let originalBuffer = buffer;
+  let savedExt = ext;
+  const shouldCompress = compression?.compressOriginals
+    && (rawW > compression.maxOriginalWidth || rawH > compression.maxOriginalWidth);
+
+  if (shouldCompress) {
+    const maxW = compression!.maxOriginalWidth;
+    const q = compression!.originalQuality;
+    const pipeline = sharp(buffer, { failOn: "none" })
+      .rotate() // bake EXIF orientation into pixels
+      .resize(maxW, maxW, { fit: "inside", withoutEnlargement: true });
+
+    if (originalMimeType === "image/png") {
+      originalBuffer = await pipeline.webp({ quality: q }).toBuffer();
+      savedExt = "webp";
+    } else if (originalMimeType === "image/heic" || originalMimeType === "image/heif") {
+      originalBuffer = await pipeline.jpeg({ quality: q }).toBuffer();
+      savedExt = "jpg";
+    } else if (originalMimeType === "image/webp") {
+      originalBuffer = await pipeline.webp({ quality: q }).toBuffer();
+      savedExt = "webp";
+    } else {
+      // JPEG and others → JPEG
+      originalBuffer = await pipeline.jpeg({ quality: q }).toBuffer();
+      savedExt = "jpg";
+    }
+
+    // Re-read compressed dimensions for accurate storage
+    const compMeta = await sharp(originalBuffer).metadata();
+    width = compMeta.width ?? width;
+    height = compMeta.height ?? height;
+  }
+
+  const filename = `${createId()}.${savedExt}`;
+
+  // Save the original (compressed or as-is).
+  await saveOriginal(galleryId, filename, originalBuffer);
 
   // Single pipeline: rotate (bakes EXIF into thumbnail pixels) → shrink-on-load
   // resize → WebP. The thumbnail always displays with correct orientation.
-  const thumbnailBuffer = await sharp(buffer, { failOn: "none" })
+  const thumbnailBuffer = await sharp(
+    shouldCompress ? originalBuffer : buffer,
+    { failOn: "none" },
+  )
     .rotate()
     .resize(600, undefined, { withoutEnlargement: true })
     .webp({ quality: 80 })
@@ -135,6 +181,6 @@ async function _process(
     width,
     height,
     mimeType: originalMimeType,
-    sizeBytes: buffer.length,
+    sizeBytes: originalBuffer.length,
   };
 }

@@ -45,6 +45,7 @@ interface Props {
   speed?: number;
   transition?: string;
   transitionDuration?: number;
+  isAdmin?: boolean;
 }
 
 type Cell = { gridColumn: string; gridRow: string };
@@ -90,7 +91,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
-export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "fade", transitionDuration = 500 }: Props) {
+export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "fade", transitionDuration = 500, isAdmin }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Visitor-adjustable overrides
@@ -207,27 +208,31 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
           : "fixed bottom-0 left-0 right-0 z-30"
       )}
     >
-      <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
-        <SelectTrigger className="h-8 w-[100px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {PAGE_TRANSITION_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
-        <SelectTrigger className="h-8 w-[65px] text-xs">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {SPEED_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div className="w-px h-5 bg-border/50 hidden sm:block" />
+      {isAdmin && (
+        <>
+          <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
+            <SelectTrigger className="h-8 w-[100px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PAGE_TRANSITION_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
+            <SelectTrigger className="h-8 w-[65px] text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {SPEED_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <div className="w-px h-5 bg-border/50 hidden sm:block" />
+        </>
+      )}
       {totalPages > 1 && (
         <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous page">
           <ChevronLeft className="h-4 w-4" />

@@ -74,6 +74,9 @@ model GlobalSettings {
   backgroundTheme        String  @default("ember")
   backgroundAnimation    String  @default("drift")
   backgroundSpeed        Int     @default(3)
+  compressOriginals      Boolean @default(true)
+  maxOriginalWidth       Int     @default(2560)
+  originalQuality        Int     @default(85)
 }
 
 model Wish {

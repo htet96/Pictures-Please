@@ -25,6 +25,9 @@ interface Settings {
   backgroundTheme: string;
   backgroundAnimation: string;
   backgroundSpeed: number;
+  compressOriginals: boolean;
+  maxOriginalWidth: number;
+  originalQuality: number;
 }
 
 const SPEED_OPTIONS = [
@@ -309,6 +312,68 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+      </div>
+
+      {/* ── Upload Compression ── */}
+      <div className="space-y-4 rounded-lg border p-4">
+        <h3 className="font-medium text-sm">Upload Compression</h3>
+
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <Label htmlFor="compressOriginals" className="text-sm font-medium">Compress large uploads</Label>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Automatically resize and compress uploaded images that exceed the maximum width. Does not affect GIFs.
+            </p>
+          </div>
+          <Switch
+            id="compressOriginals"
+            checked={form.compressOriginals}
+            onCheckedChange={(v) => setForm({ ...form, compressOriginals: v })}
+          />
+        </div>
+
+        <div className={cn("space-y-2", !form.compressOriginals && "opacity-50 pointer-events-none")}>
+          <Label>Maximum Width</Label>
+          <Select
+            value={String(form.maxOriginalWidth)}
+            onValueChange={(v) => setForm({ ...form, maxOriginalWidth: Number(v) })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[
+                { value: 1920,  label: "1920px (Full HD)" },
+                { value: 2560,  label: "2560px (2K)" },
+                { value: 3840,  label: "3840px (4K)" },
+                { value: 5120,  label: "5120px (5K)" },
+              ].map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Images wider or taller than this will be resized down. Smaller images are saved as-is.
+          </p>
+        </div>
+
+        <div className={cn("space-y-2", !form.compressOriginals && "opacity-50 pointer-events-none")}>
+          <div className="flex items-center justify-between">
+            <Label>Compression Quality</Label>
+            <span className="text-xs font-medium text-foreground">{form.originalQuality}%</span>
+          </div>
+          <input
+            type="range"
+            min={70}
+            max={95}
+            step={1}
+            value={form.originalQuality}
+            onChange={(e) => setForm({ ...form, originalQuality: Number(e.target.value) })}
+            className="w-full accent-primary"
+          />
+          <div className="flex justify-between text-[10px] text-muted-foreground/60 px-0.5">
+            <span>Smaller files</span>
+            <span>Higher quality</span>
+          </div>
         </div>
       </div>
 

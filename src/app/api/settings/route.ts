@@ -44,6 +44,9 @@ export async function PATCH(req: NextRequest) {
   if (body.backgroundTheme !== undefined) data.backgroundTheme = body.backgroundTheme;
   if (body.backgroundAnimation !== undefined) data.backgroundAnimation = body.backgroundAnimation;
   if (body.backgroundSpeed !== undefined) data.backgroundSpeed = body.backgroundSpeed;
+  if (body.compressOriginals !== undefined) data.compressOriginals = body.compressOriginals;
+  if (body.maxOriginalWidth !== undefined) data.maxOriginalWidth = body.maxOriginalWidth;
+  if (body.originalQuality !== undefined) data.originalQuality = body.originalQuality;
 
   const settings = await prisma.globalSettings.update({
     where: { id: "singleton" },

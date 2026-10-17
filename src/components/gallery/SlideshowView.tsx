@@ -49,6 +49,7 @@ interface Props {
   speed?: number;
   transition?: string;
   transitionDuration?: number;
+  isAdmin?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -85,6 +86,7 @@ export function SlideshowView({
   speed = 4000,
   transition = "fade",
   transitionDuration = 500,
+  isAdmin,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(800);
@@ -497,26 +499,30 @@ export function SlideshowView({
           {currentIndex + 1} / {photos.length}
         </span>
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
-            <SelectTrigger className="h-8 w-[110px] text-xs bg-white/10 border-white/20 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TRANSITION_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
-            <SelectTrigger className="h-8 w-[70px] text-xs bg-white/10 border-white/20 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SPEED_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {isAdmin && (
+            <>
+              <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
+                <SelectTrigger className="h-8 w-[110px] text-xs bg-white/10 border-white/20 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSITION_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
+                <SelectTrigger className="h-8 w-[70px] text-xs bg-white/10 border-white/20 text-white">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SPEED_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </>
+          )}
           {photos.length > 1 && (
             <Button
               variant="ghost"
