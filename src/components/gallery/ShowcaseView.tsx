@@ -98,12 +98,17 @@ const MARQUEE_SPEED = "35s";
 const REPEAT_FACTOR = 6;
 
 const PAGE_TRANSITION_OPTIONS = [
-  { value: "fade",  label: "Fade" },
-  { value: "zoom",  label: "Zoom In" },
-  { value: "slide", label: "Slide" },
-  { value: "blur",  label: "Blur" },
-  { value: "drop",  label: "Drop" },
-  { value: "rise",  label: "Rise" },
+  { value: "fade",      label: "Fade" },
+  { value: "zoom",      label: "Zoom In" },
+  { value: "slide",     label: "Slide" },
+  { value: "blur",      label: "Blur" },
+  { value: "drop",      label: "Drop" },
+  { value: "rise",      label: "Rise" },
+  { value: "kenburns",  label: "Ken Burns" },
+  { value: "crossblur", label: "Cross Blur" },
+  { value: "iris",      label: "Iris Wipe" },
+  { value: "cube",      label: "Cube" },
+  { value: "tiles",     label: "Tiles" },
 ];
 
 const SPEED_OPTIONS = [

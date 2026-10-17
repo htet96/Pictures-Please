@@ -51,6 +51,17 @@ export function Lightbox({ photos, initialIndex, onClose, canDelete, hasMore, on
     }
   }, [index, photos.length, hasMore, onLoadMore]);
 
+  // Preload adjacent originals so prev/next navigation feels instant
+  useEffect(() => {
+    const toPreload = [index - 1, index + 1]
+      .filter((i) => i >= 0 && i < photos.length)
+      .map((i) => photos[i]);
+    for (const p of toPreload) {
+      const img = new Image();
+      img.src = `/api/uploads/${p.originalPath}`;
+    }
+  }, [index, photos]);
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -156,10 +167,17 @@ export function Lightbox({ photos, initialIndex, onClose, canDelete, hasMore, on
           zoomed ? "overflow-auto" : "flex items-center justify-center"
         )}
       >
+        {/* Show thumbnail as instant placeholder while original loads */}
         {!loaded && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="h-8 w-8 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-          </div>
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              key={`thumb-${photo.id}`}
+              src={`/api/uploads/${photo.thumbnailPath}`}
+              alt={photo.filename}
+              className="rounded object-contain max-w-full max-h-[80vh]"
+            />
+          </>
         )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -170,6 +188,7 @@ export function Lightbox({ photos, initialIndex, onClose, canDelete, hasMore, on
           className={cn(
             "rounded object-contain transition-opacity duration-300",
             loaded ? "opacity-100" : "opacity-0",
+            !loaded && "absolute inset-0 m-auto",
             zoomed
               ? "max-w-none max-h-none cursor-zoom-out"
               : "max-w-full max-h-[80vh] cursor-zoom-in"
