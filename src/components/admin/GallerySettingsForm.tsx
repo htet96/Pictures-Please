@@ -46,7 +46,33 @@ interface GalleryData {
   showcasePhotosPerPage: number;
   showcaseEffect: string;
   showcaseBackground: string;
+  slideshowSpeed: number;
+  slideshowTransition: string;
+  transitionDuration: number;
 }
+
+const TRANSITION_OPTIONS = [
+  { value: "fade",      label: "Fade" },
+  { value: "zoom",      label: "Zoom In" },
+  { value: "slide",     label: "Slide" },
+  { value: "blur",      label: "Blur" },
+  { value: "drop",      label: "Drop" },
+  { value: "rise",      label: "Rise" },
+  { value: "kenburns",  label: "Ken Burns" },
+  { value: "crossblur", label: "Cross Blur" },
+  { value: "iris",      label: "Iris Wipe" },
+  { value: "cube",      label: "Cube" },
+  { value: "tiles",     label: "Tiles" },
+];
+
+const SPEED_OPTIONS = [
+  { value: 2000,  label: "2 seconds" },
+  { value: 3000,  label: "3 seconds" },
+  { value: 4000,  label: "4 seconds" },
+  { value: 5000,  label: "5 seconds" },
+  { value: 7000,  label: "7 seconds" },
+  { value: 10000, label: "10 seconds" },
+];
 
 const EFFECT_OPTIONS = [
   { value: "float",   label: "Float — gentle vertical drift" },
@@ -80,6 +106,9 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
     showcasePhotosPerPage: gallery.showcasePhotosPerPage,
     showcaseEffect: gallery.showcaseEffect,
     showcaseBackground: gallery.showcaseBackground,
+    slideshowSpeed: gallery.slideshowSpeed,
+    slideshowTransition: gallery.slideshowTransition,
+    transitionDuration: gallery.transitionDuration,
   });
 
   function setTabVisibility(key: "showPhotos" | "showMosaic" | "showSlideshow" | "showShowcase", value: boolean) {
@@ -109,6 +138,9 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
       showcasePhotosPerPage: form.showcasePhotosPerPage,
       showcaseEffect: form.showcaseEffect,
       showcaseBackground: form.showcaseBackground,
+      slideshowSpeed: form.slideshowSpeed,
+      slideshowTransition: form.slideshowTransition,
+      transitionDuration: form.transitionDuration,
     };
 
     if (form.removePassword) body.password = null;
@@ -283,6 +315,62 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
           </div>
         </div>
       )}
+
+      <div className="space-y-4 rounded-lg border p-4">
+        <h3 className="font-medium">Playback Settings</h3>
+        <p className="text-xs text-muted-foreground -mt-2">Applies to Slideshow, Mosaic, and Showcase views.</p>
+
+        <div className="space-y-2">
+          <Label>Play Speed</Label>
+          <Select
+            value={String(form.slideshowSpeed)}
+            onValueChange={(v) => setForm({ ...form, slideshowSpeed: Number(v) })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SPEED_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Transition Animation</Label>
+          <Select
+            value={form.slideshowTransition}
+            onValueChange={(v) => setForm({ ...form, slideshowTransition: v ?? form.slideshowTransition })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {TRANSITION_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label>Transition Speed</Label>
+          <Select
+            value={String(form.transitionDuration)}
+            onValueChange={(v) => setForm({ ...form, transitionDuration: Number(v) })}
+          >
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {[
+                { value: 200,  label: "Fast (200ms)" },
+                { value: 350,  label: "Moderate (350ms)" },
+                { value: 500,  label: "Normal (500ms)" },
+                { value: 700,  label: "Slow (700ms)" },
+                { value: 1000, label: "Very Slow (1s)" },
+              ].map((opt) => (
+                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <div className="flex items-center justify-between pt-2">
         <AlertDialog>

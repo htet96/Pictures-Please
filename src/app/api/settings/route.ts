@@ -27,9 +27,6 @@ export async function PATCH(req: NextRequest) {
   if (body.allowUserGalleries !== undefined) data.allowUserGalleries = body.allowUserGalleries;
   if (body.defaultRequireApproval !== undefined) data.defaultRequireApproval = body.defaultRequireApproval;
   if (body.defaultAllowUserDelete !== undefined) data.defaultAllowUserDelete = body.defaultAllowUserDelete;
-  if (body.slideshowSpeed !== undefined) data.slideshowSpeed = body.slideshowSpeed;
-  if (body.slideshowTransition !== undefined) data.slideshowTransition = body.slideshowTransition;
-  if (body.transitionDuration !== undefined) data.transitionDuration = body.transitionDuration;
   if (body.adminPasswordOnly !== undefined) data.adminPasswordOnly = body.adminPasswordOnly;
   if (body.watermarkEnabled !== undefined) data.watermarkEnabled = body.watermarkEnabled;
   if (body.watermarkType !== undefined) data.watermarkType = body.watermarkType;

@@ -19,9 +19,6 @@ interface Settings {
   defaultRequireApproval: boolean;
   defaultAllowUserDelete: boolean;
   adminPasswordOnly: boolean;
-  slideshowSpeed: number;
-  slideshowTransition: string;
-  transitionDuration: number;
   backgroundTheme: string;
   backgroundAnimation: string;
   backgroundSpeed: number;
@@ -29,29 +26,6 @@ interface Settings {
   maxOriginalWidth: number;
   originalQuality: number;
 }
-
-const SPEED_OPTIONS = [
-  { value: 2000, label: "2 seconds" },
-  { value: 3000, label: "3 seconds" },
-  { value: 4000, label: "4 seconds" },
-  { value: 5000, label: "5 seconds" },
-  { value: 7000, label: "7 seconds" },
-  { value: 10000, label: "10 seconds" },
-];
-
-const TRANSITION_OPTIONS = [
-  { value: "fade",  label: "Fade" },
-  { value: "zoom",  label: "Zoom In" },
-  { value: "slide", label: "Slide Right" },
-  { value: "blur",  label: "Blur Fade" },
-  { value: "drop",  label: "Drop Down" },
-  { value: "rise",  label: "Rise Up" },
-  { value: "kenburns",  label: "Ken Burns" },
-  { value: "crossblur", label: "Crossfade & Blur" },
-  { value: "iris",      label: "Circle Iris Wipe" },
-  { value: "cube",      label: "Cube Rotate" },
-  { value: "tiles",     label: "Tile Reveal" },
-];
 
 const BG_THEMES = [
   { value: "ember",  label: "Ember",  swatchColors: ["oklch(0.78 0.14 75)", "oklch(0.65 0.10 55)", "oklch(0.72 0.11 40)"] },
@@ -256,62 +230,6 @@ export function GlobalSettingsForm({ settings }: { settings: Settings }) {
           <p className="text-xs text-muted-foreground">
             Preview reflects current selections in real time. Actual page may look slightly different at full scale.
           </p>
-        </div>
-      </div>
-
-      {/* ── Slideshow & Mosaic ── */}
-      <div className="space-y-4 rounded-lg border p-4">
-        <h3 className="font-medium text-sm">Slideshow &amp; Mosaic Playback</h3>
-
-        <div className="space-y-2">
-          <Label>Play Speed</Label>
-          <Select
-            value={String(form.slideshowSpeed)}
-            onValueChange={(v) => setForm({ ...form, slideshowSpeed: Number(v) })}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SPEED_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Transition Speed</Label>
-          <Select
-            value={String(form.transitionDuration)}
-            onValueChange={(v) => setForm({ ...form, transitionDuration: Number(v) })}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {[
-                { value: 200,  label: "Fast (200ms)" },
-                { value: 350,  label: "Moderate (350ms)" },
-                { value: 500,  label: "Normal (500ms)" },
-                { value: 700,  label: "Slow (700ms)" },
-                { value: 1000, label: "Very Slow (1s)" },
-              ].map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Transition Animation (Slideshow &amp; Mosaic)</Label>
-          <Select
-            value={form.slideshowTransition}
-            onValueChange={(v) => setForm({ ...form, slideshowTransition: v ?? form.slideshowTransition })}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TRANSITION_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 

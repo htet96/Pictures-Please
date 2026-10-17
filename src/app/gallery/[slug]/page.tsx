@@ -20,34 +20,27 @@ export default async function GalleryPage({ params }: Props) {
 
   const PAGE_SIZE = 50;
 
-  const [gallery, settings] = await Promise.all([
-    prisma.gallery.findUnique({
-      where: { slug },
-      include: {
-        photos: {
-          where: { status: "APPROVED" },
-          orderBy: { createdAt: "asc" },
-          take: PAGE_SIZE,
-          select: {
-            id: true,
-            originalPath: true,
-            thumbnailPath: true,
-            filename: true,
-            mimeType: true,
-            width: true,
-            height: true,
-            status: true,
-            createdAt: true,
-          },
+  const gallery = await prisma.gallery.findUnique({
+    where: { slug },
+    include: {
+      photos: {
+        where: { status: "APPROVED" },
+        orderBy: { createdAt: "asc" },
+        take: PAGE_SIZE,
+        select: {
+          id: true,
+          originalPath: true,
+          thumbnailPath: true,
+          filename: true,
+          mimeType: true,
+          width: true,
+          height: true,
+          status: true,
+          createdAt: true,
         },
       },
-    }),
-    prisma.globalSettings.upsert({
-      where: { id: "singleton" },
-      create: { id: "singleton" },
-      update: {},
-    }),
-  ]);
+    },
+  });
 
   if (!gallery) notFound();
 
@@ -142,9 +135,9 @@ export default async function GalleryPage({ params }: Props) {
             canDelete={admin}
             allowUserDelete={gallery.allowUserDelete}
             allowUserUpload={gallery.allowUserUpload}
-            slideshowSpeed={settings.slideshowSpeed}
-            slideshowTransition={settings.slideshowTransition}
-            transitionDuration={settings.transitionDuration}
+            slideshowSpeed={gallery.slideshowSpeed}
+            slideshowTransition={gallery.slideshowTransition}
+            transitionDuration={gallery.transitionDuration}
             showPhotos={gallery.showPhotos}
             showMosaic={gallery.showMosaic}
             showSlideshow={gallery.showSlideshow}

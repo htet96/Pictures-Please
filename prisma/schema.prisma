@@ -25,6 +25,9 @@ model Gallery {
   showcasePhotosPerPage Int         @default(6)
   showcaseEffect        String      @default("float")
   showcaseBackground    String      @default("scroll")
+  slideshowSpeed        Int         @default(4000)
+  slideshowTransition   String      @default("fade")
+  transitionDuration    Int         @default(500)
   createdAt             DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   photos          Photo[]
@@ -57,9 +60,6 @@ model GlobalSettings {
   allowUserGalleries     Boolean @default(false)
   defaultRequireApproval Boolean @default(true)
   defaultAllowUserDelete Boolean @default(false)
-  slideshowSpeed         Int     @default(4000)
-  slideshowTransition    String  @default("fade")
-  transitionDuration     Int     @default(500)
   adminPasswordOnly      Boolean @default(false)
   watermarkEnabled       Boolean @default(true)
   watermarkType          String  @default("text")
