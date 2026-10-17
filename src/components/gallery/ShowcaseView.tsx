@@ -3,13 +3,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize, Minus, Plus, ArrowLeftRight, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 
 interface Photo {
@@ -29,7 +22,6 @@ interface Props {
   speed?: number;
   transition?: string;
   transitionDuration?: number;
-  isAdmin?: boolean;
 }
 
 // Animation keyframes for photo effects
@@ -96,41 +88,6 @@ const MARQUEE_SPEED = "35s";
 // fill the viewport even with very few photos. The loop is seamless because the
 // animation translates exactly -50%, and 6 = 3 pairs so both halves are identical.
 const REPEAT_FACTOR = 6;
-
-const PAGE_TRANSITION_OPTIONS = [
-  { value: "fade",      label: "Fade" },
-  { value: "zoom",      label: "Zoom In" },
-  { value: "slide",     label: "Slide" },
-  { value: "blur",      label: "Blur" },
-  { value: "drop",      label: "Drop" },
-  { value: "rise",      label: "Rise" },
-  { value: "kenburns",  label: "Ken Burns" },
-  { value: "crossblur", label: "Cross Blur" },
-  { value: "iris",      label: "Iris Wipe" },
-  { value: "cube",      label: "Cube" },
-  { value: "tiles",     label: "Tiles" },
-];
-
-const SPEED_OPTIONS = [
-  { value: 2000,  label: "2s" },
-  { value: 3000,  label: "3s" },
-  { value: 4000,  label: "4s" },
-  { value: 5000,  label: "5s" },
-  { value: 7000,  label: "7s" },
-  { value: 10000, label: "10s" },
-];
-
-const EFFECT_OPTIONS = [
-  { value: "float",   label: "Float" },
-  { value: "bounce",  label: "Bounce" },
-  { value: "jiggle",  label: "Jiggle" },
-  { value: "pulse",   label: "Pulse" },
-  { value: "sway",    label: "Sway" },
-  { value: "wobble",  label: "Wobble" },
-  { value: "breathe", label: "Breathe" },
-  { value: "spin",    label: "Spin" },
-  { value: "none",    label: "None" },
-];
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -235,7 +192,6 @@ export function ShowcaseView({
   speed = 4000,
   transition = "fade",
   transitionDuration = 500,
-  isAdmin,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -252,18 +208,10 @@ export function ShowcaseView({
   const fullscreen = nativeFullscreen || cssFullscreen;
   const [showControls, setShowControls] = useState(true);
   const [bgVertical, setBgVertical] = useState(false);
-  const [localEffect, setLocalEffect] = useState(effect);
-  const [localTransition, setLocalTransition] = useState(transition);
-  const [localSpeed, setLocalSpeed] = useState(speed);
   const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
 
   const totalPages = Math.max(1, Math.ceil(shuffledPhotos.length / perPage));
   const fadeDuration = transitionDuration;
-
-  // Sync local overrides when props change (e.g. admin saves new gallery settings)
-  useEffect(() => setLocalTransition(transition), [transition]);
-  useEffect(() => setLocalSpeed(speed), [speed]);
-  useEffect(() => setLocalEffect(effect), [effect]);
 
   useEffect(() => {
     setShuffledPhotos(shuffle(photos));
@@ -311,9 +259,9 @@ export function ShowcaseView({
 
   useEffect(() => {
     if (!playing || totalPages <= 1) return;
-    const t = setInterval(goNext, localSpeed);
+    const t = setInterval(goNext, speed);
     return () => clearInterval(t);
-  }, [playing, goNext, totalPages, localSpeed]);
+  }, [playing, goNext, totalPages, speed]);
 
   useEffect(() => {
     const onFsChange = () => setNativeFullscreen(!!document.fullscreenElement);
@@ -374,7 +322,7 @@ export function ShowcaseView({
   );
 
   // Map new slideshow-only transitions to page-level equivalents
-  const pageTransition = ({ kenburns: "fade", crossblur: "blur", iris: "fade", cube: "zoom", tiles: "fade" } as Record<string, string>)[localTransition] ?? localTransition;
+  const pageTransition = ({ kenburns: "fade", crossblur: "blur", iris: "fade", cube: "zoom", tiles: "fade" } as Record<string, string>)[transition] ?? transition;
   const gridVisibleClass = ({
     fade:  visible ? "opacity-100" : "opacity-0",
     zoom:  visible ? "opacity-100 scale-100" : "opacity-0 scale-95",
@@ -384,8 +332,8 @@ export function ShowcaseView({
     rise:  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
   } as Record<string, string>)[pageTransition] ?? (visible ? "opacity-100" : "opacity-0");
 
-  const animName = localEffect !== "none" ? `sc-${localEffect}` : undefined;
-  const animDuration = EFFECT_DURATION[localEffect] ?? "0s";
+  const animName = effect !== "none" ? `sc-${effect}` : undefined;
+  const animDuration = EFFECT_DURATION[effect] ?? "0s";
 
   // Build background strips — split all photos evenly across NUM_BG_STRIPS
   const bgStrips = useMemo(() => {
@@ -405,14 +353,14 @@ export function ShowcaseView({
     <div
       className={cn(
         "flex items-center justify-center gap-2 py-3 px-4 flex-wrap",
-        "bg-card/85 backdrop-blur-md border-t border-border/40",
+        fullscreen ? "bg-card/85 backdrop-blur-md border-b border-border/40" : "bg-card/85 backdrop-blur-md border-t border-border/40",
         "transition-all duration-300",
         fullscreen
           ? cn(
-              "absolute bottom-0 left-0 right-0 z-20",
+              "absolute top-0 left-0 right-0 z-20",
               showControls
                 ? "opacity-100 translate-y-0"
-                : "opacity-0 translate-y-2 pointer-events-none"
+                : "opacity-0 -translate-y-2 pointer-events-none"
             )
           : "fixed bottom-0 left-0 right-0 z-30"
       )}
@@ -486,42 +434,6 @@ export function ShowcaseView({
         </>
       )}
 
-      {isAdmin && (
-        <>
-          <div className="w-px h-5 bg-border/50 hidden sm:block" />
-          <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
-            <SelectTrigger className="h-8 w-[100px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PAGE_TRANSITION_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
-            <SelectTrigger className="h-8 w-[65px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {SPEED_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select value={localEffect} onValueChange={(v) => setLocalEffect(v ?? localEffect)}>
-            <SelectTrigger className="h-8 w-[95px] text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {EFFECT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </>
-      )}
-
       <Button
         variant="outline"
         size="icon"
@@ -548,7 +460,7 @@ export function ShowcaseView({
     >
       {/* Inject keyframes */}
       <style>{`
-        ${localEffect !== "none" && EFFECT_KEYFRAMES[localEffect] ? EFFECT_KEYFRAMES[localEffect] : ""}
+        ${effect !== "none" && EFFECT_KEYFRAMES[effect] ? EFFECT_KEYFRAMES[effect] : ""}
         ${background === "scroll" ? MARQUEE_KEYFRAMES : ""}
       `}</style>
 

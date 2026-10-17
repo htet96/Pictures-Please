@@ -3,37 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Pause, Play, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-
-const TRANSITION_OPTIONS = [
-  { value: "fade",      label: "Fade" },
-  { value: "zoom",      label: "Zoom In" },
-  { value: "slide",     label: "Slide" },
-  { value: "blur",      label: "Blur" },
-  { value: "drop",      label: "Drop" },
-  { value: "rise",      label: "Rise" },
-  { value: "kenburns",  label: "Ken Burns" },
-  { value: "crossblur", label: "Cross Blur" },
-  { value: "iris",      label: "Iris Wipe" },
-  { value: "cube",      label: "Cube" },
-  { value: "tiles",     label: "Tiles" },
-];
-
-const SPEED_OPTIONS = [
-  { value: 2000,  label: "2s" },
-  { value: 3000,  label: "3s" },
-  { value: 4000,  label: "4s" },
-  { value: 5000,  label: "5s" },
-  { value: 7000,  label: "7s" },
-  { value: 10000, label: "10s" },
-];
 
 interface Photo {
   id: string;
@@ -49,7 +19,6 @@ interface Props {
   speed?: number;
   transition?: string;
   transitionDuration?: number;
-  isAdmin?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -86,14 +55,9 @@ export function SlideshowView({
   speed = 4000,
   transition = "fade",
   transitionDuration = 500,
-  isAdmin,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(800);
-
-  // Visitor-adjustable overrides (initialized from admin defaults)
-  const [localTransition, setLocalTransition] = useState(transition);
-  const [localSpeed, setLocalSpeed] = useState(speed);
 
   // Dual-slot state
   const [activeSlot, setActiveSlot] = useState<"a" | "b">("a");
@@ -183,9 +147,9 @@ export function SlideshowView({
   // Autoplay
   useEffect(() => {
     if (!playing || photos.length <= 1) return;
-    const t = setInterval(next, localSpeed);
+    const t = setInterval(next, speed);
     return () => clearInterval(t);
-  }, [playing, next, photos.length, localSpeed]);
+  }, [playing, next, photos.length, speed]);
 
   // Touch swipe
   useEffect(() => {
@@ -228,7 +192,7 @@ export function SlideshowView({
 
   if (photos.length === 0) return null;
 
-  const effectiveTransition = prefersReducedMotion.current ? "fade" : localTransition;
+  const effectiveTransition = prefersReducedMotion.current ? "fade" : transition;
   const dur = prefersReducedMotion.current ? 300 : transitionDuration;
 
   // ---------------------------------------------------------------------------
@@ -341,7 +305,7 @@ export function SlideshowView({
           style.opacity = 0;
         } else if (isFront) {
           style.opacity = 1;
-          imgStyle.animation = `kb-${slot} ${localSpeed}ms linear forwards`;
+          imgStyle.animation = `kb-${slot} ${speed}ms linear forwards`;
         } else {
           style.opacity = 0;
         }
@@ -494,35 +458,16 @@ export function SlideshowView({
       </div>
 
       {/* Overlay controls */}
-      <div className="absolute bottom-0 left-0 right-0 flex items-center justify-between p-4 bg-gradient-to-t from-black/70 to-transparent z-10 flex-wrap gap-2">
+      <div className={cn(
+        "absolute left-0 right-0 flex items-center justify-between p-4 z-10 flex-wrap gap-2",
+        fullscreen
+          ? "top-0 bg-gradient-to-b from-black/70 to-transparent"
+          : "bottom-0 bg-gradient-to-t from-black/70 to-transparent"
+      )}>
         <span className="text-white/70 text-sm tabular-nums">
           {currentIndex + 1} / {photos.length}
         </span>
         <div className="flex items-center gap-2 flex-wrap">
-          {isAdmin && (
-            <>
-              <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
-                <SelectTrigger className="h-8 w-[110px] text-xs bg-white/10 border-white/20 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TRANSITION_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
-                <SelectTrigger className="h-8 w-[70px] text-xs bg-white/10 border-white/20 text-white">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {SPEED_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </>
-          )}
           {photos.length > 1 && (
             <Button
               variant="ghost"

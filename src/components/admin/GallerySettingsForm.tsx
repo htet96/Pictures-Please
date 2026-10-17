@@ -65,15 +65,6 @@ const TRANSITION_OPTIONS = [
   { value: "tiles",     label: "Tiles" },
 ];
 
-const SPEED_OPTIONS = [
-  { value: 2000,  label: "2 seconds" },
-  { value: 3000,  label: "3 seconds" },
-  { value: 4000,  label: "4 seconds" },
-  { value: 5000,  label: "5 seconds" },
-  { value: 7000,  label: "7 seconds" },
-  { value: 10000, label: "10 seconds" },
-];
-
 const EFFECT_OPTIONS = [
   { value: "float",   label: "Float — gentle vertical drift" },
   { value: "bounce",  label: "Bounce — playful up/down bounce" },
@@ -321,18 +312,22 @@ export function GallerySettingsForm({ gallery }: { gallery: GalleryData }) {
         <p className="text-xs text-muted-foreground -mt-2">Applies to Slideshow, Mosaic, and Showcase views.</p>
 
         <div className="space-y-2">
-          <Label>Play Speed</Label>
-          <Select
-            value={String(form.slideshowSpeed)}
-            onValueChange={(v) => setForm({ ...form, slideshowSpeed: Number(v) })}
-          >
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SPEED_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label htmlFor="slideshowSpeed">Play Speed (seconds)</Label>
+          <Input
+            id="slideshowSpeed"
+            type="number"
+            step="1"
+            min="1"
+            max="30"
+            value={form.slideshowSpeed / 1000}
+            onChange={(e) => {
+              const seconds = parseFloat(e.target.value);
+              if (!isNaN(seconds)) {
+                setForm({ ...form, slideshowSpeed: Math.round(Math.min(30, Math.max(1, seconds)) * 1000) });
+              }
+            }}
+            className="w-24"
+          />
         </div>
 
         <div className="space-y-2">
