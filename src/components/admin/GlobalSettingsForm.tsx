@@ -43,6 +43,11 @@ const TRANSITION_OPTIONS = [
   { value: "blur",  label: "Blur Fade" },
   { value: "drop",  label: "Drop Down" },
   { value: "rise",  label: "Rise Up" },
+  { value: "kenburns",  label: "Ken Burns" },
+  { value: "crossblur", label: "Crossfade & Blur" },
+  { value: "iris",      label: "Circle Iris Wipe" },
+  { value: "cube",      label: "Cube Rotate" },
+  { value: "tiles",     label: "Tile Reveal" },
 ];
 
 const BG_THEMES = [

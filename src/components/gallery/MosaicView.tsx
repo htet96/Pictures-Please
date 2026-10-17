@@ -3,7 +3,32 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Play, Pause, ChevronLeft, ChevronRight, Maximize, Minimize } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+
+const PAGE_TRANSITION_OPTIONS = [
+  { value: "fade",  label: "Fade" },
+  { value: "zoom",  label: "Zoom In" },
+  { value: "slide", label: "Slide" },
+  { value: "blur",  label: "Blur" },
+  { value: "drop",  label: "Drop" },
+  { value: "rise",  label: "Rise" },
+];
+
+const SPEED_OPTIONS = [
+  { value: 2000,  label: "2s" },
+  { value: 3000,  label: "3s" },
+  { value: 4000,  label: "4s" },
+  { value: 5000,  label: "5s" },
+  { value: 7000,  label: "7s" },
+  { value: 10000, label: "10s" },
+];
 
 interface Photo {
   id: string;
@@ -67,6 +92,10 @@ function shuffle<T>(arr: T[]): T[] {
 
 export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "fade", transitionDuration = 500 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Visitor-adjustable overrides
+  const [localTransition, setLocalTransition] = useState(transition);
+  const [localSpeed, setLocalSpeed] = useState(speed);
   const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [shuffledPhotos, setShuffledPhotos] = useState(() => shuffle(photos));
@@ -105,9 +134,9 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
 
   useEffect(() => {
     if (!playing || totalPages <= 1) return;
-    const t = setInterval(goNext, speed);
+    const t = setInterval(goNext, localSpeed);
     return () => clearInterval(t);
-  }, [playing, goNext, totalPages, speed]);
+  }, [playing, goNext, totalPages, localSpeed]);
 
   useEffect(() => {
     const onFsChange = () => setFullscreen(!!document.fullscreenElement);
@@ -151,6 +180,8 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
     ? "calc((100vh - 56px) / 4)"
     : "clamp(70px, calc(22vw - 8px), 220px)";
 
+  // Map new slideshow-only transitions to page-level equivalents
+  const pageTransition = ({ kenburns: "fade", crossblur: "blur", iris: "fade", cube: "zoom", tiles: "fade" } as Record<string, string>)[localTransition] ?? localTransition;
   const gridVisibleClass = ({
     fade:  visible ? "opacity-100" : "opacity-0",
     zoom:  visible ? "opacity-100 scale-100" : "opacity-0 scale-95",
@@ -158,7 +189,7 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
     blur:  visible ? "opacity-100 blur-0" : "opacity-0 blur-sm",
     drop:  visible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-6",
     rise:  visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6",
-  } as Record<string, string>)[transition] ?? (visible ? "opacity-100" : "opacity-0");
+  } as Record<string, string>)[pageTransition] ?? (visible ? "opacity-100" : "opacity-0");
 
   const controls = (
     <div
@@ -176,6 +207,27 @@ export function MosaicView({ photos, onPhotoClick, speed = 4000, transition = "f
           : "fixed bottom-0 left-0 right-0 z-30"
       )}
     >
+      <Select value={localTransition} onValueChange={(v) => setLocalTransition(v ?? localTransition)}>
+        <SelectTrigger className="h-8 w-[100px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {PAGE_TRANSITION_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select value={String(localSpeed)} onValueChange={(v) => setLocalSpeed(Number(v))}>
+        <SelectTrigger className="h-8 w-[65px] text-xs">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {SPEED_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={String(opt.value)}>{opt.label}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <div className="w-px h-5 bg-border/50 hidden sm:block" />
       {totalPages > 1 && (
         <Button variant="outline" size="icon" onClick={goPrev} aria-label="Previous page">
           <ChevronLeft className="h-4 w-4" />
